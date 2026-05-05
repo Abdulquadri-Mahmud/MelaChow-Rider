@@ -1,0 +1,62 @@
+{
+  "name": "MelaChow Rider",
+  "short_name": "MelaRider",
+  "description": "Manage MelaChow delivery jobs, availability, earnings, wallet, and notifications.",
+  "version": "1.0.0",
+  "updated": "2026-05-05",
+  "start_url": "/rider/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["food", "business", "navigation"],
+  "shortcuts": [
+    {
+      "name": "Rider Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open active rider delivery screen",
+      "url": "/rider/dashboard",
+      "icons": [
+        {
+          "src": "/logo.jpeg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Earnings",
+      "short_name": "Earnings",
+      "description": "View rider earnings",
+      "url": "/rider/earnings",
+      "icons": [
+        {
+          "src": "/logo.jpeg",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
