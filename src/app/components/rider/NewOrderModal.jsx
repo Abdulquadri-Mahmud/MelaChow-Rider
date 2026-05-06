@@ -1,17 +1,25 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, MapPin, Bike, Navigation, Clock, X, CheckCircle2, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Package, MapPin, Bike, Navigation, Clock, X, CheckCircle2, Loader2, Volume2 } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getRiderSpecificOrder, toggleRiderAvailability } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 
-export default function NewOrderModal({ riderId, assignmentData, onClose, onRefresh }) {
+const ASSIGNMENT_RESPONSE_SECONDS = 90;
+
+export default function NewOrderModal({ riderId, assignmentData, onClose, onRefresh, persistent = false }) {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    const [now, setNow] = useState(Date.now());
+    const timeoutHandledRef = useRef(false);
     const router = useRouter();
+    const assignedTimestamp = new Date(assignmentData?.assignedAt || assignmentData?.createdAt || assignmentData?.receivedAt || Date.now()).getTime();
+    const assignedAt = Number.isNaN(assignedTimestamp) ? Date.now() : assignedTimestamp;
+    const elapsedSeconds = Math.max(0, Math.floor((now - assignedAt) / 1000));
+    const secondsLeft = Math.max(0, ASSIGNMENT_RESPONSE_SECONDS - elapsedSeconds);
 
     const notifyAssignmentAction = (action) => {
         if (typeof window === "undefined") return;
@@ -40,6 +48,34 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
         };
         fetchOrder();
     }, [riderId, assignmentData]);
+
+    useEffect(() => {
+        const timer = window.setInterval(() => setNow(Date.now()), 1000);
+        return () => window.clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const handleTimeout = async () => {
+            if (!persistent || timeoutHandledRef.current || secondsLeft > 0 || actionLoading || !riderId) return;
+
+            timeoutHandledRef.current = true;
+            try {
+                setActionLoading(true);
+                await toggleRiderAvailability(riderId, "available", "timeout");
+                toast.error("Assignment timed out. Admin has been notified.", { duration: 7000 });
+                notifyAssignmentAction("timeout");
+                if (onRefresh) await onRefresh();
+                onClose();
+            } catch (error) {
+                timeoutHandledRef.current = false;
+                toast.error(error.response?.data?.message || "Failed to report assignment timeout");
+            } finally {
+                setActionLoading(false);
+            }
+        };
+
+        handleTimeout();
+    }, [actionLoading, onClose, onRefresh, persistent, riderId, secondsLeft]);
 
     const handleAccept = async () => {
         try {
@@ -80,7 +116,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={onClose}
+                onClick={persistent ? undefined : onClose}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
 
@@ -92,12 +128,14 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
             >
                 {/* Header Gradient */}
                 <div className="bg-gradient-to-r from-orange-600 to-orange-500 p-6 text-white relative">
-                    <button
-                        onClick={onClose}
-                        className="absolute right-6 top-6 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-                    >
-                        <X size={18} />
-                    </button>
+                    {!persistent && (
+                        <button
+                            onClick={onClose}
+                            className="absolute right-6 top-6 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shadow-inner">
                             <Bike size={28} className="animate-bounce" />
@@ -110,6 +148,25 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                 </div>
 
                 <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-[1fr_auto] gap-3 rounded-3xl border border-orange-500/15 bg-orange-50 p-4 dark:bg-orange-500/10 dark:border-orange-500/20">
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 rounded-xl bg-orange-600 p-2 text-white">
+                                <Volume2 size={18} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-300">
+                                    Assignment Alert Active
+                                </p>
+                                <p className="mt-1 text-xs font-bold leading-relaxed text-orange-900 dark:text-orange-100">
+                                    This alert keeps repeating until you accept or reject the delivery.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-lg font-black tabular-nums text-orange-600 shadow-sm dark:bg-[#101216] dark:text-orange-300">
+                            {secondsLeft}s
+                        </div>
+                    </div>
+
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-4">
                             <Loader2 size={40} className="animate-spin text-orange-600" />

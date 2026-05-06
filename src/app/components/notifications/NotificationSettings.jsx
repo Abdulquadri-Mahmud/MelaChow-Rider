@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 
-export default function NotificationSettings() {
+export default function NotificationSettings({ role = "user", mode = "customer" }) {
     const {
         isSupported,
         subscription,
@@ -14,7 +14,7 @@ export default function NotificationSettings() {
         loading,
         subscribe,
         unsubscribe,
-    } = usePushNotifications();
+    } = usePushNotifications(role);
 
     const [preferences, setPreferences] = useState({
         orderUpdates: true,
@@ -138,8 +138,8 @@ export default function NotificationSettings() {
                         <PreferenceItem
                             icon={Package}
                             color="blue"
-                            title="Order Updates"
-                            desc="Track your orders in real-time"
+                            title={mode === "rider" ? "Delivery Assignments" : "Order Updates"}
+                            desc={mode === "rider" ? "Get assigned delivery jobs even when the app is closed" : "Track your orders in real-time"}
                             active={preferences.orderUpdates}
                             onToggle={() => togglePreference("orderUpdates")}
                         />
@@ -173,9 +173,19 @@ export default function NotificationSettings() {
                         <p className="text-xs font-black text-amber-900 dark:text-amber-400 uppercase italic tracking-wider">Why Enable Notifications?</p>
                     </div>
                     <ul className="space-y-2">
-                        <BenefitItem text="Get instant updates when your order is ready" />
-                        <BenefitItem text="Never miss exclusive deals and discounts" />
-                        <BenefitItem text="Stay informed about delivery status" />
+                        {mode === "rider" ? (
+                            <>
+                                <BenefitItem text="Receive delivery jobs when the app is closed" />
+                                <BenefitItem text="Avoid missing admin-assigned pickups" />
+                                <BenefitItem text="Keep your delivery flow and wallet moving" />
+                            </>
+                        ) : (
+                            <>
+                                <BenefitItem text="Get instant updates when your order is ready" />
+                                <BenefitItem text="Never miss exclusive deals and discounts" />
+                                <BenefitItem text="Stay informed about delivery status" />
+                            </>
+                        )}
                     </ul>
                 </div>
             )}

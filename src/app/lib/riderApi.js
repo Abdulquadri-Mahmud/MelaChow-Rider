@@ -51,12 +51,12 @@ export const updateRiderProfile = async (riderId, data) => {
 };
 
 // Status
-export const toggleRiderAvailability = async (riderId, status) => {
+export const toggleRiderAvailability = async (riderId, status, reason) => {
     if (!riderId || riderId === 'undefined') {
         throw new Error('Invalid rider ID passed to toggleRiderAvailability');
     }
     // console.log("riderId:", riderId)
-    const response = await API.patch(`/riders/${riderId}/status`, { status });
+    const response = await API.patch(`/riders/${riderId}/status`, { status, ...(reason ? { reason } : {}) });
     return response.data;
 };
 
