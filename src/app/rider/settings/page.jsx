@@ -5,12 +5,13 @@ import { motion } from "framer-motion";
 import { AnimatePresence } from "framer-motion";
 import {
     Bike, Phone, User, Shield, LogOut, ChevronRight,
-    Bell, Moon, HelpCircle, MessageCircle, Star, Edit3, Mail,
+    Moon, HelpCircle, MessageCircle, Star, Edit3, Mail,
     Camera, Lock
 } from "lucide-react";
 import { useTheme } from "@/app/context/ThemeContext";
 import { useRider } from "@/app/context/RiderContext";
 import PermanentInstallButton from "@/app/components/PermanentInstallButton";
+import NotificationSettings from "@/app/components/notifications/NotificationSettings";
 import toast from "react-hot-toast";
 
 const SettingRow = ({ icon: Icon, label, value, onClick, danger = false, badge }) => (
@@ -64,7 +65,6 @@ const uploadToCloudinary = async (file) => {
 export default function RiderSettingsPage() {
     const { rider, logout, isOnline, toggleAvailability, updateProfile } = useRider();
     const { theme, toggleTheme } = useTheme();
-    const [notifications, setNotifications] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editData, setEditData] = useState({ name: "", phone: "", email: "", password: "" });
@@ -180,20 +180,8 @@ export default function RiderSettingsPage() {
                 <div className="px-4 pt-4 pb-2">
                     <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Preferences</p>
                 </div>
-                <div className="flex items-center gap-4 p-4 rounded-2xl">
-                    <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center shrink-0">
-                        <Bell size={18} className="text-gray-500 dark:text-gray-400" />
-                    </div>
-                    <div className="flex-1">
-                        <p className="font-bold text-sm text-gray-900 dark:text-white">Push Notifications</p>
-                        <p className="text-xs text-gray-500 mt-0.5">New orders and alerts</p>
-                    </div>
-                    <button
-                        onClick={() => setNotifications(!notifications)}
-                        className={`relative w-12 h-6 rounded-full transition-colors ${notifications ? "bg-orange-600" : "bg-gray-200 dark:bg-white/10"}`}
-                    >
-                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${notifications ? "left-7" : "left-1"}`} />
-                    </button>
+                <div className="p-4">
+                    <NotificationSettings role="rider" mode="rider" />
                 </div>
                 {/* Theme Toggle */}
                 <div className="flex items-center gap-4 p-4 rounded-2xl">

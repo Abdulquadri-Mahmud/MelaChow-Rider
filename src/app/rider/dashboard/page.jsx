@@ -137,7 +137,7 @@ export default function RiderDashboard() {
                 Promise.allSettled([refreshProfile(), fetchActiveOrder()]);
             }
 
-            if (action === "reject") {
+            if (action === "reject" || action === "timeout") {
                 setLocalAssignmentStatus("rejected");
                 setActiveOrder(null);
                 Promise.allSettled([refreshProfile(), fetchActiveOrder()]);

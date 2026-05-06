@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Wallet,
@@ -254,7 +254,23 @@ export default function RiderWalletPage() {
         if (riderId) { fetchWallet(); fetchPayoutDetails(); }
     }, [riderId]);
 
-    const transactions = wallet?.transactions || [];
+    const getTransactionTime = (transaction) => {
+        const rawDate =
+            transaction?.date ||
+            transaction?.createdAt ||
+            transaction?.updatedAt ||
+            transaction?.paidAt ||
+            transaction?.processedAt ||
+            transaction?.completedAt ||
+            transaction?._id?.$date;
+        const timestamp = new Date(rawDate).getTime();
+        return Number.isNaN(timestamp) ? 0 : timestamp;
+    };
+
+    const transactions = useMemo(
+        () => [...(wallet?.transactions || [])].sort((a, b) => getTransactionTime(b) - getTransactionTime(a)),
+        [wallet?.transactions]
+    );
     const balance = wallet?.balance || 0;
 
     const withdrawalStatusStyle = (status) => {
