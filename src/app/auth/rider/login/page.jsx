@@ -42,11 +42,12 @@ export default function RiderLoginPage() {
         } catch (err) {
             console.error("Rider Login Error:", err);
             const status = err.response?.status;
-            const message = err.response?.data?.message || "Invalid credentials. Please try again.";
-            if (status === 403) {
-                setError("Account Locked. Too many failed attempts. Please contact support.");
-            } else if (status === 401) {
+            const message = err.response?.data?.message || err.message || "Unable to sign in. Please try again.";
+
+            if (status === 401) {
                 setError("Invalid phone number or password.");
+            } else if (status === 403) {
+                setError(message);
             } else {
                 setError(message);
             }
