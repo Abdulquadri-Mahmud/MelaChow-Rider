@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Lock, Eye, EyeOff, Bike, Loader2, AlertCircle, ChevronRight, ChevronLeft, Moon, Sun, Home } from "lucide-react";
 import { riderLogin } from "@/app/lib/riderApi";
@@ -199,7 +200,10 @@ export default function RiderLoginPage() {
                 <div className="mt-12 text-center">
                     <div className="p-4 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-2xl border border-white/50 dark:border-white/5 inline-block px-10">
                         <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                            Partner with us? <button className="text-orange-600 hover:underline">Apply Here</button>
+                            Partner with us?{" "}
+                            <Link href="/auth/rider/register" className="text-orange-600 hover:underline">
+                                Apply Here
+                            </Link>
                         </p>
                     </div>
                 </div>
