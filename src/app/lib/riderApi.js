@@ -40,6 +40,11 @@ export const riderLogin = async (phone, password) => {
     return response.data;
 };
 
+export const riderRegister = async (payload) => {
+    const response = await API.post("/riders/register", payload);
+    return response.data;
+};
+
 export const getRiderProfile = async () => {
     const response = await API.get("/auth/rider/me");
     return response.data;
