@@ -8,14 +8,14 @@
  * - Skip waiting on update (controlled by update manager)
  */
 
-const CACHE_VERSION = 'melachow-v1.1.0';
+const CACHE_VERSION = 'melachow-v1.3.0';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
+const MAX_RETAINED_STATIC_CACHES = 3;
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
-    '/',
     '/offline',
     '/manifest.json',
 ];
@@ -49,9 +49,9 @@ self.addEventListener('install', (event) => {
     console.log('[SW] Installing service worker...');
 
     event.waitUntil(
-        caches.open(STATIC_CACHE).then((cache) => {
+        caches.open(STATIC_CACHE).then(async (cache) => {
             console.log('[SW] Precaching assets');
-            return cache.addAll(PRECACHE_ASSETS);
+            await Promise.allSettled(PRECACHE_ASSETS.map((asset) => cache.add(asset)));
         })
     );
 
@@ -63,21 +63,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
     console.log('[SW] Activating service worker...');
 
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames
-                    .filter((cacheName) => {
-                        // Delete old caches
-                        return cacheName.startsWith('melachow-') && cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE && cacheName !== IMAGE_CACHE;
-                    })
-                    .map((cacheName) => {
-                        console.log('[SW] Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    })
-            );
-        })
-    );
+    event.waitUntil(cleanupCaches());
 
     // Take control of all pages immediately
     return self.clients.claim();
@@ -153,7 +139,7 @@ function isStaticAsset(url) {
 async function networkFirstStrategy(request, cacheName) {
     try {
         // Try network first
-        const networkResponse = await fetch(request);
+        const networkResponse = await fetchWithRetry(request);
 
         // Cache successful responses
         if (networkResponse && networkResponse.status === 200) {
@@ -210,7 +196,7 @@ async function cacheFirstStrategy(request, cacheName, maxAge = null) {
 
     // Not in cache, fetch from network
     try {
-        const networkResponse = await fetch(request);
+        const networkResponse = await fetchWithRetry(request);
 
         // Cache successful responses
         if (networkResponse && networkResponse.status === 200) {
@@ -231,7 +217,7 @@ async function cacheFirstStrategy(request, cacheName, maxAge = null) {
 // Helper: Fetch and cache in background
 async function fetchAndCache(request, cacheName) {
     try {
-        const response = await fetch(request);
+        const response = await fetchWithRetry(request);
         if (response && response.status === 200) {
             const cache = await caches.open(cacheName);
             cache.put(request, response);
@@ -239,6 +225,56 @@ async function fetchAndCache(request, cacheName) {
     } catch (error) {
         console.log('[SW] Background fetch failed:', request.url);
     }
+}
+
+async function fetchWithRetry(request, attempts = 3, delayMs = 450) {
+    let lastError;
+
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+        try {
+            const response = await fetch(request);
+
+            if (response.status >= 500 && attempt < attempts - 1) {
+                await wait(delayMs * (attempt + 1));
+                continue;
+            }
+
+            return response;
+        } catch (error) {
+            lastError = error;
+            if (attempt < attempts - 1) {
+                await wait(delayMs * (attempt + 1));
+            }
+        }
+    }
+
+    throw lastError;
+}
+
+function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function cleanupCaches() {
+    const cacheNames = await caches.keys();
+    const staticCaches = cacheNames
+        .filter((cacheName) => cacheName.startsWith('melachow-') && cacheName.endsWith('-static'))
+        .sort();
+    const staticCachesToDelete = staticCaches.slice(0, Math.max(0, staticCaches.length - MAX_RETAINED_STATIC_CACHES));
+
+    return Promise.all(
+        cacheNames
+            .filter((cacheName) => {
+                if (!cacheName.startsWith('melachow-')) return false;
+                if (cacheName === STATIC_CACHE || cacheName === DYNAMIC_CACHE || cacheName === IMAGE_CACHE) return false;
+                if (cacheName.endsWith('-static')) return staticCachesToDelete.includes(cacheName);
+                return true;
+            })
+            .map((cacheName) => {
+                console.log('[SW] Deleting old cache:', cacheName);
+                return caches.delete(cacheName);
+            })
+    );
 }
 
 // --- Enhanced Push Notification Handlers ---
