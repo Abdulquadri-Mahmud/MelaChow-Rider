@@ -5,6 +5,7 @@ import { SocketProvider } from "./context/SocketContext";
 import QueryProvider from "./providers/QueryProvider";
 import { ThemeProvider } from "./context/ThemeContext";
 import InstallPWA from "./components/InstallPWA";
+import ChunkLoadRecovery from "./components/ChunkLoadRecovery";
 import { Toaster } from "react-hot-toast";
 import "@/app/lib/api";
 
@@ -85,6 +86,7 @@ export default function RootLayout({ children }) {
             <QueryProvider>
               <SocketProvider>
                 {children}
+                <ChunkLoadRecovery />
                 <InstallPWA />
               </SocketProvider>
             </QueryProvider>

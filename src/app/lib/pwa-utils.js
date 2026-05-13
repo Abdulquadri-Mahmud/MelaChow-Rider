@@ -18,6 +18,15 @@ export async function registerServiceWorker() {
         return null;
     }
 
+    if (window.__melachowServiceWorkerRegistrationPromise) {
+        return window.__melachowServiceWorkerRegistrationPromise;
+    }
+
+    window.__melachowServiceWorkerRegistrationPromise = registerServiceWorkerOnce();
+    return window.__melachowServiceWorkerRegistrationPromise;
+}
+
+async function registerServiceWorkerOnce() {
     try {
         // Wait for page to load before registering
         if (document.readyState === 'loading') {
@@ -41,6 +50,7 @@ export async function registerServiceWorker() {
         return registration;
     } catch (error) {
         console.error('[PWA] Service worker registration failed:', error);
+        window.__melachowServiceWorkerRegistrationPromise = null;
         return null;
     }
 }

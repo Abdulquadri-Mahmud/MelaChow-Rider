@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { usePWAInstall } from "@/app/hooks/usePWAInstall";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Share, PlusSquare, Smartphone } from "lucide-react";
+import { registerServiceWorker } from "@/app/lib/pwa-utils";
 
 /**
  * Premium PWA Install Banner Component
@@ -16,15 +17,7 @@ const InstallPWA = () => {
   const [showIOSTutorial, setShowIOSTutorial] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then((reg) => console.log("Service Worker registered"))
-          .catch((err) => console.error("Service Worker registration failed", err));
-      });
-    }
+    registerServiceWorker();
 
     // Show banner after 2 seconds if app is installable or is on iOS (and not installed)
     const timer = setTimeout(() => {
@@ -153,7 +146,7 @@ const InstallPWA = () => {
                     <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm shrink-0">
                       <PlusSquare className="text-slate-700 dark:text-slate-200" size={16} />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">2. Scroll down and tap 'Add to Home Screen'</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">2. Scroll down and tap Add to Home Screen</span>
                   </div>
                 </div>
 
