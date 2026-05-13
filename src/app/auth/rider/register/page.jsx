@@ -34,6 +34,8 @@ const initialForm = {
     confirmPassword: "",
     stateId: "",
     cityId: "",
+    requestedState: "",
+    requestedCity: "",
     vehicleType: "motorbike",
 };
 
@@ -49,6 +51,8 @@ export default function RiderRegisterPage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+    const [useCustomState, setUseCustomState] = useState(false);
+    const [useCustomCity, setUseCustomCity] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -95,14 +99,20 @@ export default function RiderRegisterPage() {
         setForm((current) => ({
             ...current,
             [field]: value,
-            ...(field === "stateId" ? { cityId: "" } : {}),
+            ...(field === "stateId" ? { cityId: "", requestedState: "", requestedCity: "" } : {}),
         }));
     };
 
     const validateForm = () => {
         if (!form.name.trim()) return "Enter your full name.";
         if (!form.phone.trim()) return "Enter your phone number.";
-        if (!form.stateId || !form.cityId) return "Select your delivery state and city.";
+        if (useCustomState || useCustomCity) {
+            if (!form.requestedState.trim() || !form.requestedCity.trim()) {
+                return "Enter your delivery state and city.";
+            }
+        } else if (!form.stateId || !form.cityId) {
+            return "Select your delivery state and city.";
+        }
         if (form.password.length < 8) return "Password must be at least 8 characters.";
         if (form.password !== form.confirmPassword) return "Passwords do not match.";
         return "";
@@ -121,14 +131,26 @@ export default function RiderRegisterPage() {
         setError("");
 
         try {
+            const locationPayload = useCustomState || useCustomCity
+                ? {
+                    state: form.requestedState.trim(),
+                    city: form.requestedCity.trim(),
+                    requestedState: form.requestedState.trim(),
+                    requestedCity: form.requestedCity.trim(),
+                    serviceZones: form.requestedCity.trim() ? [form.requestedCity.trim()] : [],
+                }
+                : {
+                    stateId: form.stateId,
+                    cityId: form.cityId,
+                    serviceZones: selectedCity?.name ? [selectedCity.name] : [],
+                };
+
             await riderRegister({
                 name: form.name.trim(),
                 phone: form.phone.trim(),
                 email: form.email.trim() || undefined,
                 password: form.password,
-                stateId: form.stateId,
-                cityId: form.cityId,
-                serviceZones: selectedCity?.name ? [selectedCity.name] : [],
+                ...locationPayload,
                 vehicleOwnership: "own",
                 vehicleType: form.vehicleType,
             });
@@ -311,8 +333,25 @@ export default function RiderRegisterPage() {
                                     <select
                                         required
                                         disabled={loadingLocations || !!locationError}
-                                        value={form.stateId}
-                                        onChange={(event) => updateField("stateId", event.target.value)}
+                                        value={useCustomState ? "__custom__" : form.stateId}
+                                        onChange={(event) => {
+                                            const value = event.target.value;
+                                            if (value === "__custom__") {
+                                                setUseCustomState(true);
+                                                setUseCustomCity(true);
+                                                setForm((current) => ({
+                                                    ...current,
+                                                    stateId: "",
+                                                    cityId: "",
+                                                    requestedState: "",
+                                                    requestedCity: "",
+                                                }));
+                                                return;
+                                            }
+                                            setUseCustomState(false);
+                                            setUseCustomCity(false);
+                                            updateField("stateId", value);
+                                        }}
                                         className="rider-register-input appearance-none"
                                     >
                                         <option value="">{loadingLocations ? "Loading states..." : "Select state"}</option>
@@ -321,15 +360,26 @@ export default function RiderRegisterPage() {
                                                 {location.state}
                                             </option>
                                         ))}
+                                        <option value="__custom__">My state is not listed</option>
                                     </select>
                                 </Field>
 
+                                {!useCustomState && (
                                 <Field label="City" icon={<MapPin size={18} />}>
                                     <select
                                         required
                                         disabled={!form.stateId || loadingLocations || !!locationError}
-                                        value={form.cityId}
-                                        onChange={(event) => updateField("cityId", event.target.value)}
+                                        value={useCustomCity ? "__custom__" : form.cityId}
+                                        onChange={(event) => {
+                                            const value = event.target.value;
+                                            if (value === "__custom__") {
+                                                setUseCustomCity(true);
+                                                setForm((current) => ({ ...current, cityId: "", requestedCity: "" }));
+                                                return;
+                                            }
+                                            setUseCustomCity(false);
+                                            updateField("cityId", value);
+                                        }}
                                         className="rider-register-input appearance-none"
                                     >
                                         <option value="">{form.stateId ? "Select city" : "Select state first"}</option>
@@ -338,9 +388,36 @@ export default function RiderRegisterPage() {
                                                 {city.name}
                                             </option>
                                         ))}
+                                        <option value="__custom__">My city is not listed</option>
                                     </select>
                                 </Field>
+                                )}
                             </div>
+
+                            {(useCustomState || useCustomCity) && (
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <Field label="Type state" icon={<MapPin size={18} />}>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={form.requestedState}
+                                        onChange={(event) => updateField("requestedState", event.target.value)}
+                                        placeholder="e.g. Lagos"
+                                        className="rider-register-input"
+                                    />
+                                </Field>
+                                <Field label="Type city" icon={<MapPin size={18} />}>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={form.requestedCity}
+                                        onChange={(event) => updateField("requestedCity", event.target.value)}
+                                        placeholder="e.g. Ikorodu"
+                                        className="rider-register-input"
+                                    />
+                                </Field>
+                            </div>
+                            )}
 
                             {locationError && (
                                 <p className="rounded-2xl bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
