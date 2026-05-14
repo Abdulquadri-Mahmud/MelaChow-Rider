@@ -154,13 +154,11 @@ export const RiderProvider = ({ children }) => {
         socket.on('rider_status_changed', handleStatusChange);
         socket.on('rider_deactivated', handleRiderDeactivated);
         socket.on('order_assigned', handleRiderAssigned);
-        socket.on('ORDER_ASSIGNED_TO_RIDER', handleRiderAssigned);
 
         return () => {
             socket.off('rider_status_changed', handleStatusChange);
             socket.off('rider_deactivated', handleRiderDeactivated);
             socket.off('order_assigned', handleRiderAssigned);
-            socket.off('ORDER_ASSIGNED_TO_RIDER', handleRiderAssigned);
         };
     }, [riderId, wsConnected, socket]);
 
