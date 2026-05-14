@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { getRiderProfile, toggleRiderAvailability, getRiderNotifications } from '@/app/lib/riderApi';
 import { TokenManager } from '@/app/lib/auth-token';
 import toast from 'react-hot-toast';
@@ -36,8 +36,10 @@ export const RiderProvider = ({ children }) => {
     const [isToggling, setIsToggling] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const notificationsInFlightRef = useRef(null);
+    const lastNotificationsFetchRef = useRef(0);
 
-    const refreshProfile = async () => {
+    const refreshProfile = useCallback(async ({ includeNotifications = false } = {}) => {
         // Do NOT gate on localStorage token.
         // Real auth is the riderToken httpOnly cookie sent automatically
         // by the browser. localStorage is an unreliable secondary signal
@@ -61,10 +63,35 @@ export const RiderProvider = ({ children }) => {
             // ✅ FIX: Check all active statuses, not just 'available'
             setIsOnline(ACTIVE_STATUSES.includes(riderData?.status));
 
-            const notifsRaw = await getRiderNotifications();
-            if (notifsRaw?.success && notifsRaw?.notifications) {
-                setNotifications(notifsRaw.notifications);
-                setUnreadCount(notifsRaw.notifications.filter(n => !n.read).length);
+            if (includeNotifications) {
+                const now = Date.now();
+                const shouldFetchNotifications = now - lastNotificationsFetchRef.current > 30000;
+
+                if (shouldFetchNotifications) {
+                    try {
+                        if (!notificationsInFlightRef.current) {
+                            notificationsInFlightRef.current = getRiderNotifications()
+                                .finally(() => {
+                                    notificationsInFlightRef.current = null;
+                                });
+                        }
+
+                        const notifsRaw = await notificationsInFlightRef.current;
+                        lastNotificationsFetchRef.current = Date.now();
+
+                        if (notifsRaw?.success && notifsRaw?.notifications) {
+                            setNotifications(notifsRaw.notifications);
+                            setUnreadCount(notifsRaw.notifications.filter(n => !n.read).length);
+                        }
+                    } catch (notificationError) {
+                        if (notificationError?.response?.status === 429) {
+                            lastNotificationsFetchRef.current = Date.now();
+                            console.warn('Rider notifications are rate limited. Keeping existing notifications.');
+                        } else {
+                            console.error('Failed to fetch rider notifications:', notificationError);
+                        }
+                    }
+                }
             }
 
         } catch (error) {
@@ -81,10 +108,10 @@ export const RiderProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        refreshProfile();
+        refreshProfile({ includeNotifications: true });
 
         const updateNotifs = (e) => {
             setNotifications(prev => [e.detail, ...prev]);
