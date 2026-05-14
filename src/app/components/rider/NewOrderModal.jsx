@@ -221,6 +221,55 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                                 </div>
                             </div>
 
+                            {/* Order Manifest - Human Readable Version */}
+                            <div className="bg-gray-50 dark:bg-white/5 rounded-3xl p-3 space-y-4 border border-gray-100 dark:border-white/5">
+                                <div className="flex items-center gap-2 border-b border-gray-200 dark:border-white/10 pb-3">
+                                    <span className="text-xl">📋</span>
+                                    <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight text-sm">Items to Pick Up</h3>
+                                </div>
+                                
+                                <div className="space-y-6">
+                                    {(order?.items || []).map((item, idx) => {
+                                        const addOns = (item.selected_options || [])
+                                            .map(opt => `${opt.quantity || 1}x ${opt.label}`)
+                                            .join(", ");
+
+                                        return (
+                                            <div key={idx} className="relative pl-4 border-l-2 border-orange-500/30">
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2 py-0.5 rounded-lg bg-orange-600 text-white text-[11px] font-black uppercase">
+                                                            {item.quantity} UNIT{item.quantity > 1 ? 'S' : ''}
+                                                        </span>
+                                                        <span className="text-base font-black text-gray-900 dark:text-white">
+                                                            {item.name}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    {item.portion_label && (
+                                                        <div className="flex items-center gap-2 text-xs">
+                                                            <span className="font-bold text-gray-400 uppercase text-[9px]">Size:</span>
+                                                            <span className="font-bold text-gray-600 dark:text-gray-300">
+                                                                {item.portion_quantity > 1 ? `${item.portion_quantity}x ` : ''}{item.portion_label}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    {addOns && (
+                                                        <div className="mt-2 p-3 rounded-2xl bg-white dark:bg-black/20 border border-gray-100 dark:border-white/5">
+                                                            <p className="text-[9px] font-black uppercase text-gray-400 mb-1 tracking-widest">Extra Details / Add-ons:</p>
+                                                            <p className="text-xs font-bold text-gray-700 dark:text-gray-200 leading-relaxed">
+                                                                {addOns}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
                             {/* Actions */}
                             <div className="grid grid-cols-2 gap-3 pt-2">
                                 <button
