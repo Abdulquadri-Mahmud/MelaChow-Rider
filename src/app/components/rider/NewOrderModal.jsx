@@ -111,7 +111,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
     if (!assignmentData) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex bg-white dark:bg-[#1A1D23]">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -124,7 +124,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                 initial={{ y: "100%", opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
-                className="relative w-full max-w-lg bg-white dark:bg-[#1A1D23] rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl border border-gray-100 dark:border-white/10"
+                className="relative w-full min-h-screen bg-white dark:bg-[#1A1D23] overflow-y-auto"
             >
                 {/* Header Gradient */}
                 <div className="bg-gradient-to-r from-orange-600 to-orange-500 p-6 text-white relative">

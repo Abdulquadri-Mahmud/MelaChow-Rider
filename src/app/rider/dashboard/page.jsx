@@ -5,8 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Bike, Navigation, MapPin, Package, CheckCircle2, AlertCircle,
-    Wallet, Star, Phone, Loader2, Activity,
-    ArrowUpRight, RefreshCcw
+    Wallet, Star, Phone, Loader2, Activity, RefreshCcw
 } from "lucide-react";
 import { useRider } from "@/app/context/RiderContext";
 import { getActiveRiderOrder, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery } from "@/app/lib/riderApi";
@@ -256,10 +255,10 @@ export default function RiderDashboard() {
                     <div className="w-10 h-10 bg-gray-200 dark:bg-white/10 rounded-xl"></div>
                 </div>
 
-                {/* Quick Stats Skeleton */}
-                <div className="grid grid-cols-2 gap-4">
-                    {[1, 2, 3, 4].map(idx => (
-                        <div key={idx} className="bg-gray-200 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl h-[120px]"></div>
+                {/* Compact Stats Skeleton */}
+                <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3].map(idx => (
+                        <div key={idx} className="bg-gray-200 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl h-[76px]"></div>
                     ))}
                 </div>
 
@@ -291,67 +290,53 @@ export default function RiderDashboard() {
                 </button>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Compact Stats */}
+            <div className="grid grid-cols-3 gap-2">
                 <Link
                     href="/rider/wallet"
-                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl md:p-5 p-3 cursor-pointer hover:border-orange-500/30 transition-all group block"
+                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
                 >
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-orange-500/10 text-orange-500 rounded-lg group-hover:bg-orange-600 group-hover:text-white transition-colors">
-                            <Wallet size={16} />
-                        </div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Earnings</span>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                        <Wallet size={13} className="text-orange-500 shrink-0" />
+                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Earnings</span>
                     </div>
-                    <div className="text-2xl font-black text-gray-900 dark:text-white flex items-center justify-between">
+                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
                         ₦{Number(rider?.totalEarnings ?? 0).toLocaleString()}
-                        <ArrowUpRight size={16} className="text-gray-600 group-hover:text-orange-500 transition-colors" />
                     </div>
-                    <div className="text-[10px] text-gray-600 font-bold mt-1">lifetime total</div>
+                    <div className="text-[8px] text-gray-500 font-bold uppercase mt-0.5">lifetime</div>
                 </Link>
 
-                <div className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl md:p-5 p-3">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 rounded-lg">
-                            <Star size={16} />
-                        </div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Rating</span>
+                <Link
+                    href="/rider/stats"
+                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
+                >
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                        <Star size={13} className="text-yellow-600 dark:text-yellow-500 shrink-0" />
+                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Rating</span>
                     </div>
-                    <div className="text-2xl font-black text-gray-900 dark:text-white">
+                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
                         {rider?.rating ? Number(rider.rating).toFixed(1) : "New"}
                     </div>
-                    <div className="text-[10px] text-gray-600 font-bold mt-1">
-                        {rider?.ratingCount ? `${rider.ratingCount} reviews` : "No reviews yet"}
+                    <div className="text-[8px] text-gray-500 font-bold uppercase mt-0.5 truncate">
+                        {rider?.ratingCount ? `${rider.ratingCount} reviews` : "No reviews"}
                     </div>
-                </div>
+                </Link>
 
-                <div className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl md:p-5 p-3">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-500 rounded-lg">
-                            <Activity size={16} />
-                        </div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Deliveries</span>
+                <Link
+                    href="/rider/stats"
+                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
+                >
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                        <Activity size={13} className="text-blue-600 dark:text-blue-500 shrink-0" />
+                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Deliveries</span>
                     </div>
-                    <div className="text-2xl font-black text-gray-900 dark:text-white">
+                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
                         {rider?.totalDeliveries ?? 0}
                     </div>
-                    <div className="text-[10px] text-gray-600 font-bold mt-1">lifetime</div>
-                </div>
-
-                <div className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl md:p-5 p-3">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`p-2 rounded-lg ${isOnline ? "bg-green-500/10 text-green-600 dark:text-green-500" : "bg-red-500/10 text-red-600 dark:text-red-500"}`}>
-                            <Bike size={16} />
-                        </div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</span>
-                    </div>
-                    <div className={`text-xl font-black ${isOnline ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                    <div className={`text-[8px] font-bold uppercase mt-0.5 truncate ${isOnline ? "text-green-500" : "text-red-500"}`}>
                         {isOnline ? "Online" : "Offline"}
                     </div>
-                    <div className="text-[10px] text-gray-600 font-bold mt-1">
-                        {isOnline ? "Accepting orders" : "Not accepting orders"}
-                    </div>
-                </div>
+                </Link>
             </div>
 
             {/* Active Order */}
@@ -599,7 +584,7 @@ export default function RiderDashboard() {
                             {/* OTP Verification Modal */}
                             <AnimatePresence>
                                 {otpState.step === "awaiting_otp" && (
-                                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+                                    <div className="fixed inset-0 z-50 flex bg-white dark:bg-[#1A1D23]">
                                         <motion.div 
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
@@ -607,12 +592,12 @@ export default function RiderDashboard() {
                                             className="absolute inset-0 bg-black/60 backdrop-blur-sm shadow-2xl"
                                         />
                                         <motion.div 
-                                            initial={{ opacity: 0, y: 100, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 100, scale: 0.95 }}
-                                            className="relative w-full max-w-sm bg-white dark:bg-[#1A1D23] rounded-xl p-6 shadow-2xl border border-gray-100 dark:border-white/10"
+                                            initial={{ opacity: 0, y: 100 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 100 }}
+                                            className="relative w-full min-h-screen bg-white dark:bg-[#1A1D23] p-6 overflow-y-auto flex items-center justify-center"
                                         >
-                                            <div className="flex flex-col items-center text-center space-y-4">
+                                            <div className="flex w-full max-w-sm flex-col items-center text-center space-y-4">
                                                 <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center">
                                                     <AlertCircle size={32} className="text-orange-600 dark:text-orange-500" />
                                                 </div>
