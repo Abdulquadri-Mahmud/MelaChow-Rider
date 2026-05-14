@@ -19,6 +19,10 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
     const assignedTimestamp = new Date(assignmentData?.assignedAt || assignmentData?.createdAt || assignmentData?.receivedAt || Date.now()).getTime();
     const assignedAt = Number.isNaN(assignedTimestamp) ? Date.now() : assignedTimestamp;
     const elapsedSeconds = Math.max(0, Math.floor((now - assignedAt) / 1000));
+    const assignmentMode = assignmentData?.assignmentMode ||
+        assignmentData?.metadata?.assignmentMode ||
+        (assignmentData?.order?.riderAssignment?.assignedBy ? "manual" : "automatic");
+    const isManualAssignment = assignmentMode === "manual";
     const secondsLeft = Math.max(0, ASSIGNMENT_RESPONSE_SECONDS - elapsedSeconds);
 
     const notifyAssignmentAction = (action) => {
@@ -56,7 +60,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
 
     useEffect(() => {
         const handleTimeout = async () => {
-            if (!persistent || timeoutHandledRef.current || secondsLeft > 0 || actionLoading || !riderId) return;
+            if (!isManualAssignment || !persistent || timeoutHandledRef.current || secondsLeft > 0 || actionLoading || !riderId) return;
 
             timeoutHandledRef.current = true;
             try {
@@ -75,7 +79,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
         };
 
         handleTimeout();
-    }, [actionLoading, onClose, onRefresh, persistent, riderId, secondsLeft]);
+    }, [actionLoading, isManualAssignment, onClose, onRefresh, persistent, riderId, secondsLeft]);
 
     const handleAccept = async () => {
         try {
@@ -158,12 +162,14 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                                     Assignment Alert Active
                                 </p>
                                 <p className="mt-1 text-xs font-bold leading-relaxed text-orange-900 dark:text-orange-100">
-                                    This alert keeps repeating until you accept or reject the delivery.
+                                    {isManualAssignment
+                                        ? "This alert keeps repeating until you accept, reject, or the timer expires."
+                                        : "This alert keeps repeating until you accept or reject the delivery."}
                                 </p>
                             </div>
                         </div>
                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-lg font-black tabular-nums text-orange-600 shadow-sm dark:bg-[#101216] dark:text-orange-300">
-                            {secondsLeft}s
+                            {isManualAssignment ? `${secondsLeft}s` : "Auto"}
                         </div>
                     </div>
 
