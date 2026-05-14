@@ -231,7 +231,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                                 <div className="space-y-6">
                                     {(order?.items || []).map((item, idx) => {
                                         const addOns = (item.selected_options || [])
-                                            .map(opt => `${opt.quantity > 1 ? `${opt.quantity}x ` : ''}${opt.label}`)
+                                            .map(opt => `${opt.quantity || 1}x ${opt.label}`)
                                             .join(", ");
 
                                         return (
