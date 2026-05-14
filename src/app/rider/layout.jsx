@@ -51,6 +51,7 @@ function speakRiderAssignment(message) {
     } catch { }
 
     try {
+        /*
         if ("speechSynthesis" in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(message);
@@ -58,6 +59,7 @@ function speakRiderAssignment(message) {
             utterance.pitch = 1;
             window.speechSynthesis.speak(utterance);
         }
+        */
     } catch { }
 }
 
