@@ -314,7 +314,6 @@ export const SocketProvider = ({ children }) => {
             };
 
             socketService.onOrderAssigned(handleAssignment);
-            socketService.socket?.on('ORDER_ASSIGNED_TO_RIDER', handleAssignment);
         };
 
         // Reset and connect
