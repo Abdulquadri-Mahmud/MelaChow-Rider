@@ -14,22 +14,24 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [now, setNow] = useState(Date.now());
+    const [fetchError, setFetchError] = useState(null);
     const timeoutHandledRef = useRef(false);
     const router = useRouter();
+    
     const assignedTimestamp = new Date(assignmentData?.assignedAt || assignmentData?.createdAt || assignmentData?.receivedAt || Date.now()).getTime();
     const assignedAt = Number.isNaN(assignedTimestamp) ? Date.now() : assignedTimestamp;
     const elapsedSeconds = Math.max(0, Math.floor((now - assignedAt) / 1000));
-    const assignmentMode = assignmentData?.assignmentMode ||
-        assignmentData?.metadata?.assignmentMode ||
-        (assignmentData?.order?.riderAssignment?.assignedBy ? "manual" : "automatic");
+    const assignmentMode = assignmentData?.assignmentMode || 
+                           assignmentData?.metadata?.assignmentMode || 
+                           (assignmentData?.order?.riderAssignment?.assignedBy ? "manual" : "automatic");
     const isManualAssignment = assignmentMode === "manual";
     const secondsLeft = Math.max(0, ASSIGNMENT_RESPONSE_SECONDS - elapsedSeconds);
 
     const notifyAssignmentAction = (action) => {
         if (typeof window === "undefined") return;
         window.dispatchEvent(new CustomEvent("rider:assignment_action", {
-            detail: {
-                action,
+            detail: { 
+                action, 
                 orderId: assignmentData?.orderId,
                 order
             }
@@ -39,19 +41,22 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
     useEffect(() => {
         const fetchOrder = async () => {
             if (!riderId || !assignmentData?.orderId) return;
+            setLoading(true);
+            setFetchError(null);
             try {
                 const data = await getRiderSpecificOrder(riderId, assignmentData.orderId);
                 setOrder(data.order || data.data || data);
             } catch (error) {
                 console.error("Failed to fetch assigned order details:", error);
-                toast.error("Order details are no longer available.");
-                onClose();
+                setFetchError(error.response?.data?.message || "Order details are no longer available.");
+                // ✅ FIX: Do NOT call onClose() here. Let the modal stay open with the error message
+                // to prevent the flickering/retry loop in the dashboard.
             } finally {
                 setLoading(false);
             }
         };
         fetchOrder();
-    }, [riderId, assignmentData]);
+    }, [riderId, assignmentData?.orderId]);
 
     useEffect(() => {
         const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -162,8 +167,8 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                                     Assignment Alert Active
                                 </p>
                                 <p className="mt-1 text-xs font-bold leading-relaxed text-orange-900 dark:text-orange-100">
-                                    {isManualAssignment
-                                        ? "This alert keeps repeating until you accept, reject, or the timer expires."
+                                    {isManualAssignment 
+                                        ? "This alert keeps repeating until you accept, reject, or the timer expires." 
                                         : "This alert keeps repeating until you accept or reject the delivery."}
                                 </p>
                             </div>
@@ -178,6 +183,20 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                             <Loader2 size={40} className="animate-spin text-orange-600" />
                             <p className="text-gray-500 font-bold animate-pulse">Loading order details...</p>
                         </div>
+                    ) : fetchError ? (
+                        <div className="bg-red-50 dark:bg-red-500/5 border border-red-500/10 rounded-3xl p-8 flex flex-col items-center text-center gap-4">
+                            <X size={40} className="text-red-500" />
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Offer no longer valid</h3>
+                                <p className="text-sm text-gray-500 mt-1">{fetchError}</p>
+                            </div>
+                            <button 
+                                onClick={onClose}
+                                className="px-6 py-2 bg-gray-200 dark:bg-white/10 rounded-xl font-bold text-xs"
+                            >
+                                CLOSE
+                            </button>
+                        </div>
                     ) : (
                         <>
                             {/* Earnings Potential */}
@@ -191,7 +210,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                             {/* Locations */}
                             <div className="space-y-4 relative">
                                 <div className="absolute left-[19px] top-6 bottom-6 w-0.5 bg-gray-200 dark:bg-white/5 border-dashed border-l" />
-
+                                
                                 <div className="flex gap-4 relative">
                                     <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center shrink-0 z-10">
                                         <Package size={20} className="text-orange-600 dark:text-orange-500" />
@@ -211,10 +230,10 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Deliver To</p>
                                         <h4 className="font-bold text-gray-900 dark:text-white truncate">{order?.userName || (order?.userId?.firstname ? `${order.userId.firstname} ${order.userId.lastname || ''}` : "Customer")}</h4>
                                         <p className="text-xs text-gray-500 line-clamp-1">
-                                            {order?.deliveryFullAddress ||
-                                                (order?.deliveryAddress?.addressLine
-                                                    ? `${order.deliveryAddress.addressLine}, ${order.deliveryAddress.city || ''}, ${order.deliveryAddress.state || ''}`.replace(/,,/g, ',').trim()
-                                                    : order?.deliveryAddress?.addressLine || "Customer Address")}
+                                            {order?.deliveryFullAddress || 
+                                             (order?.deliveryAddress?.addressLine 
+                                                ? `${order.deliveryAddress.addressLine}, ${order.deliveryAddress.city || ''}, ${order.deliveryAddress.state || ''}`.replace(/,,/g, ',').trim() 
+                                                : order?.deliveryAddress?.addressLine || "Customer Address")}
                                         </p>
                                     </div>
                                 </div>
