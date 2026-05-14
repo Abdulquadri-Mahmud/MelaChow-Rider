@@ -11,12 +11,10 @@ import { useRider } from "@/app/context/RiderContext";
 import { getActiveRiderOrder, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
-import { useSocket } from "@/app/context/SocketContext";
 import { toggleRiderAvailability } from "@/app/lib/riderApi";
 
 export default function RiderDashboard() {
     const { rider, isOnline, refreshProfile } = useRider();
-    const { socket } = useSocket();
     const [activeOrder, setActiveOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -150,21 +148,6 @@ export default function RiderDashboard() {
             window.removeEventListener("rider:assignment_action", handleAssignmentAction);
         };
     }, [riderId, refreshProfile]);
-
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.on("order_assigned", (payload) => {
-            console.log("🛵 Order assigned via dashboard listener:", payload);
-            toast.success("New order assigned to you!");
-            setLocalAssignmentStatus(null);
-            fetchActiveOrder();
-        });
-
-        return () => {
-            socket.off("order_assigned");
-        };
-    }, [socket]);
 
     useEffect(() => {
         if (activeOrder?._id) {
