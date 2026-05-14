@@ -158,27 +158,8 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                 </div>
 
                 <div className="p-6 space-y-6">
-                    <div className="grid grid-cols-[1fr_auto] gap-3 rounded-3xl border border-orange-500/15 bg-orange-50 p-4 dark:bg-orange-500/10 dark:border-orange-500/20">
-                        <div className="flex items-start gap-3">
-                            <div className="mt-0.5 rounded-xl bg-orange-600 p-2 text-white">
-                                <Volume2 size={18} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-300">
-                                    Assignment Alert Active
-                                </p>
-                                <p className="mt-1 text-xs font-bold leading-relaxed text-orange-900 dark:text-orange-100">
-                                    {isManualAssignment 
-                                        ? "This alert keeps repeating until you accept, reject, or the timer expires." 
-                                        : "This alert keeps repeating until you accept or reject the delivery."}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-lg font-black tabular-nums text-orange-600 shadow-sm dark:bg-[#101216] dark:text-orange-300">
-                            {isManualAssignment ? `${secondsLeft}s` : "Auto"}
-                        </div>
-                    </div>
-
+                    {/* Alert Sound is active, but we removed the redundant text box per request */}
+                    
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-4">
                             <Loader2 size={40} className="animate-spin text-orange-600" />
@@ -204,7 +185,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                             <div className="bg-green-500/5 border border-green-500/10 rounded-3xl p-5 flex flex-col items-center">
                                 <span className="text-green-600 dark:text-green-500 text-[10px] font-black uppercase tracking-widest mb-1">Potential Earnings</span>
                                 <h3 className="text-4xl font-black text-green-600 dark:text-green-500">
-                                    ₦{(order?.deliveryShare || order?.total || 0).toLocaleString()}
+                                    ₦{(order?.riderEarnings || order?.deliveryShare || 0).toLocaleString()}
                                 </h3>
                             </div>
 
