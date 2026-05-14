@@ -28,6 +28,7 @@ export const SocketProvider = ({ children }) => {
     // Guard: ensures socket event listeners are registered only once per
     // socket instance, not on every reconnection attempt from the interval
     const listenersRegistered = useRef(false);
+    const recentAssignmentIds = useRef(new Set());
     const authFailed = useRef(false);
 
     // Determine role based on path
@@ -294,6 +295,16 @@ export const SocketProvider = ({ children }) => {
             // Rider assignment event
             const handleAssignment = (data) => {
                 if (role === 'rider') {
+                    const assignmentKey = data?.orderId?.$oid || data?.orderId || data?.order?._id?.$oid || data?.order?._id;
+                    if (assignmentKey && recentAssignmentIds.current.has(assignmentKey)) {
+                        return;
+                    }
+                    if (assignmentKey) {
+                        recentAssignmentIds.current.add(assignmentKey);
+                        window.setTimeout(() => {
+                            recentAssignmentIds.current.delete(assignmentKey);
+                        }, 60000);
+                    }
                     console.log('🛵 Order assigned to rider:', data);
                     const assignmentNotification = {
                         _id: `assign-${Date.now()}`,

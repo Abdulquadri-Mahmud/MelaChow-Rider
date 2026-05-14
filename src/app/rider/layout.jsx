@@ -125,6 +125,7 @@ function RiderLayoutInner({ children }) {
     const showAssignment = useCallback((payload, source = "live") => {
         const orderId = payload?.orderId || getOrderId(payload?.order);
         if (!orderId) return;
+        if (assignmentIdRef.current === orderId) return;
 
         assignmentIdRef.current = orderId;
         setAssignmentModal({

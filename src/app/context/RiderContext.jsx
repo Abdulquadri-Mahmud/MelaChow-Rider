@@ -147,7 +147,6 @@ export const RiderProvider = ({ children }) => {
                     currentOrderId: data.orderId
                 } : prev);
                 setIsOnline(true);
-                window.dispatchEvent(new CustomEvent('rider:new_assignment', { detail: data }));
             }
         };
 
