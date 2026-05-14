@@ -222,7 +222,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                             </div>
 
                             {/* Order Manifest - Human Readable Version */}
-                            <div className="bg-gray-50 dark:bg-white/5 rounded-3xl p-6 space-y-4 border border-gray-100 dark:border-white/5">
+                            <div className="bg-gray-50 dark:bg-white/5 rounded-3xl p-3 space-y-4 border border-gray-100 dark:border-white/5">
                                 <div className="flex items-center gap-2 border-b border-gray-200 dark:border-white/10 pb-3">
                                     <span className="text-xl">📋</span>
                                     <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight text-sm">Items to Pick Up</h3>
@@ -250,7 +250,7 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                                                         <div className="flex items-center gap-2 text-xs">
                                                             <span className="font-bold text-gray-400 uppercase text-[9px]">Size:</span>
                                                             <span className="font-bold text-gray-600 dark:text-gray-300">
-                                                                {item.portion_label}
+                                                                {item.portion_quantity > 1 ? `${item.portion_quantity}x ` : ''}{item.portion_label}
                                                             </span>
                                                         </div>
                                                     )}
