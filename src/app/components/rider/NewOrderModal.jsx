@@ -199,8 +199,8 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Pickup From</p>
-                                        <h4 className="font-bold text-gray-900 dark:text-white truncate">{order?.restaurantName || order?.restaurantId?.storeName || order?.restaurantId?.name || "Store"}</h4>
-                                        <p className="text-xs text-gray-500 line-clamp-1">{order?.restaurantId?.fullAddress || order?.restaurantId?.address?.street || order?.vendorLocation?.address || "Restaurant Address"}</p>
+                                        <h4 className="font-bold text-gray-900 dark:text-white truncate">{order?.restaurantName || order?.restaurantId?.storeName || "Store"}</h4>
+                                        <p className="text-xs text-gray-500 line-clamp-1">{order?.restaurantAddress || order?.restaurantId?.fullAddress || "Restaurant Address"}</p>
                                     </div>
                                 </div>
 
