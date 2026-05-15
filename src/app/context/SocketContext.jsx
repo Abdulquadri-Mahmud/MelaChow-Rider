@@ -325,6 +325,11 @@ export const SocketProvider = ({ children }) => {
             };
 
             socketService.onOrderAssigned(handleAssignment);
+
+            socketService.onAssignmentCancelled((data) => {
+                console.log('🚫 Assignment cancelled:', data);
+                window.dispatchEvent(new CustomEvent('rider:assignment_cancelled', { detail: data }));
+            });
         };
 
         // Reset and connect

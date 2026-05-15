@@ -181,6 +181,14 @@ class SocketService {
     }
 
     /**
+     * Listen for assignment cancellations (multi-rider sync)
+     */
+    onAssignmentCancelled(callback) {
+        if (!this.socket) return;
+        this.socket.on('assignment_cancelled', callback);
+    }
+
+    /**
      * Send ping to server
      */
     ping() {
