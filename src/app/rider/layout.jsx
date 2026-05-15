@@ -194,11 +194,20 @@ function RiderLayoutInner({ children }) {
             clearAssignment();
         };
 
+        const handleAssignmentCancelled = (e) => {
+            if (assignmentIdRef.current === e.detail.orderId) {
+                toast(e.detail.message || "This order was accepted by another rider", { icon: 'ℹ️' });
+                clearAssignment();
+            }
+        };
+
         window.addEventListener('rider:new_assignment', handleNewAssignment);
         window.addEventListener('rider:assignment_action', handleAssignmentAction);
+        window.addEventListener('rider:assignment_cancelled', handleAssignmentCancelled);
         return () => {
             window.removeEventListener('rider:new_assignment', handleNewAssignment);
             window.removeEventListener('rider:assignment_action', handleAssignmentAction);
+            window.removeEventListener('rider:assignment_cancelled', handleAssignmentCancelled);
         };
     }, [clearAssignment, showAssignment]);
 

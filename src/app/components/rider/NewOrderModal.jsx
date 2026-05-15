@@ -97,7 +97,12 @@ export default function NewOrderModal({ riderId, assignmentData, onClose, onRefr
             onClose();
             router.push('/rider/dashboard');
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to accept order");
+            const message = error.response?.data?.message || "Failed to accept order";
+            toast.error(message);
+            // If the order was already taken (409), close the modal so the rider isn't stuck
+            if (error.response?.status === 409) {
+                onClose();
+            }
         } finally {
             setActionLoading(false);
         }
