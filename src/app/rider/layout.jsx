@@ -23,9 +23,16 @@ function getOrderId(order) {
 
 function isPendingAssignmentOrder(order) {
     const status = order?.orderStatus || order?.status;
+    const riderAssignmentStatus = order?.riderAssignment?.status;
     const hasRider = order?.riderId || order?.riderId?._id;
-    // If it has a rider assigned, it's no longer a "pending offer" for the broadcast modal
-    return ASSIGNMENT_STATUSES.includes(status) && !hasRider;
+
+    // If it has a rider assigned, or the assignment is already accepted/picked up,
+    // it's no longer a "pending offer" that needs the broadcast modal.
+    if (hasRider || ["accepted", "picked_up", "delivered"].includes(riderAssignmentStatus)) {
+        return false;
+    }
+
+    return ASSIGNMENT_STATUSES.includes(status);
 }
 
 function speakRiderAssignment(message) {
@@ -157,6 +164,12 @@ function RiderLayoutInner({ children }) {
             const orderId = getOrderId(order);
 
             if (orderId && isPendingAssignmentOrder(order)) {
+                // Double check: if the order is already assigned to THIS rider, it's not pending for them
+                const assignedRiderId = order?.riderId?._id || order?.riderId;
+                if (assignedRiderId && String(assignedRiderId) === String(riderId)) {
+                    return;
+                }
+
                 if (assignmentIdRef.current !== orderId) {
                     showAssignment({ orderId, order, recovered: true }, "polling");
                     if (showToast) {
