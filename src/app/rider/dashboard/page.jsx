@@ -152,6 +152,13 @@ export default function RiderDashboard() {
     useEffect(() => {
         if (activeOrder?._id) {
             socketService.subscribeToRiderOrder?.(activeOrder._id);
+            
+            // Listen for status updates (specifically for OTP generation)
+            socketService.onOrderStatusUpdate((data) => {
+                if (data.orderId === activeOrder._id && data.deliveryOtp) {
+                    setActiveOrder(prev => prev ? { ...prev, deliveryOtp: data.deliveryOtp } : prev);
+                }
+            });
         }
     }, [activeOrder?._id]);
 
@@ -488,6 +495,21 @@ export default function RiderDashboard() {
                                     CALL
                                 </a>
                             </div>
+
+                            {/* 🔐 NEW: Code Sent Notice */}
+                            {activeOrder?.deliveryOtp && (
+                                <div className="bg-zinc-900 dark:bg-white rounded-2xl p-4 mb-8 flex items-center gap-4 border border-zinc-800 dark:border-zinc-200 shadow-xl shadow-black/10">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 size={20} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest leading-none mb-1">Confirmation Ready</p>
+                                        <p className="text-white dark:text-zinc-900 font-bold text-xs">
+                                            Delivery code has been sent to the customer's portal.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Actions Zone */}
                             <div className="grid grid-cols-2 gap-4">
