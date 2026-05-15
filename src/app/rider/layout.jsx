@@ -3,7 +3,7 @@
 import { RiderProvider } from "@/app/context/RiderContext";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bike, LayoutDashboard, History, Settings, Bell, Power, Loader2, Wallet } from "lucide-react";
+import { Bike, LayoutDashboard, History, Settings, Bell, Power, Loader2, Wallet, AlertCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRider } from "@/app/context/RiderContext";
@@ -26,8 +26,6 @@ function isPendingAssignmentOrder(order) {
     const riderAssignmentStatus = order?.riderAssignment?.status;
     const hasRider = order?.riderId || order?.riderId?._id;
 
-    // If it has a rider assigned, or the assignment is already accepted/picked up,
-    // it's no longer a "pending offer" that needs the broadcast modal.
     if (hasRider || ["accepted", "picked_up", "delivered"].includes(riderAssignmentStatus)) {
         return false;
     }
@@ -58,25 +56,11 @@ function speakRiderAssignment(message) {
             window.setTimeout(() => context.close().catch(() => { }), 1200);
         }
     } catch { }
-
-    try {
-        /*
-        if ("speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(message);
-            utterance.rate = 0.95;
-            utterance.pitch = 1;
-            window.speechSynthesis.speak(utterance);
-        }
-        */
-    } catch { }
 }
 
 function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
-    const { rider, logout } = useRider();
+    const { rider } = useRider();
     const [scrolled, setScrolled] = useState(false);
-
-    // console.log(rider)
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -96,7 +80,6 @@ function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {/* Status Toggle */}
                     <button
                         onClick={toggleAvailability}
                         disabled={isToggling}
@@ -109,7 +92,6 @@ function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
                         {isOnline ? 'ONLINE' : 'OFFLINE'}
                     </button>
 
-                    {/* Profile */}
                     <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-white/10">
                         <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border-2 border-orange-500/20">
                             {rider?.avatar ? <img src={rider.avatar} alt="Rider" className="w-full h-full object-cover" /> : <Bike size={18} className="text-orange-600" />}
@@ -164,7 +146,6 @@ function RiderLayoutInner({ children }) {
             const orderId = getOrderId(order);
 
             if (orderId && isPendingAssignmentOrder(order)) {
-                // Double check: if the order is already assigned to THIS rider, it's not pending for them
                 const assignedRiderId = order?.riderId?._id || order?.riderId;
                 if (assignedRiderId && String(assignedRiderId) === String(riderId)) {
                     return;
@@ -258,8 +239,23 @@ function RiderLayoutInner({ children }) {
     }
 
     if (!rider && !pathname.includes('/auth')) {
-        // Redirect logic handled in Context or Page usually, but for safety:
-        return null;
+        return (
+            <div className="min-h-screen bg-white dark:bg-[#0F1115] flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
+                    <AlertCircle size={32} className="text-red-600 dark:text-red-500" />
+                </div>
+                <h2 className="text-xl font-black text-gray-900 dark:text-white mb-2">Connection Issue</h2>
+                <p className="text-sm text-gray-500 max-w-xs mb-6">
+                    We couldn't load your rider profile. This might be due to a slow connection or server maintenance.
+                </p>
+                <button 
+                    onClick={() => window.location.reload()}
+                    className="px-8 py-3 bg-orange-600 text-white font-black rounded-2xl shadow-lg shadow-orange-600/20 active:scale-95 transition-all"
+                >
+                    RETRY
+                </button>
+            </div>
+        );
     }
 
     return (
@@ -299,7 +295,6 @@ function RiderLayoutInner({ children }) {
                         )}
                     </Link>
 
-                    {/* Enhanced Center Toggle */}
                     <div className="relative -mt-10 mb-2">
                         <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleAvailability(); }}
@@ -402,4 +397,3 @@ export default function RiderLayout({ children }) {
         </RiderProvider>
     );
 }
-
