@@ -59,8 +59,9 @@ function speakRiderAssignment(message) {
 }
 
 function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
-    const { rider } = useRider();
+    const { rider, unreadCount } = useRider();
     const [scrolled, setScrolled] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -80,6 +81,19 @@ function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    {/* Notifications Bell */}
+                    <Link href="/rider/notifications" className="relative group">
+                        <div className={`p-2 rounded-xl transition-all ${pathname === '/rider/notifications' ? 'bg-orange-600/10 text-orange-600' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-orange-600'}`}>
+                            <Bell size={20} className={pathname === '/rider/notifications' ? 'fill-orange-600/10' : ''} />
+                        </div>
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-600 text-white text-[10px] font-black rounded-full border-2 border-white dark:border-[#0F1115] px-1">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                        )}
+                    </Link>
+
+                    {/* Status Toggle */}
                     <button
                         onClick={toggleAvailability}
                         disabled={isToggling}
@@ -92,6 +106,7 @@ function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
                         {isOnline ? 'ONLINE' : 'OFFLINE'}
                     </button>
 
+                    {/* Profile */}
                     <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-white/10">
                         <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border-2 border-orange-500/20">
                             {rider?.avatar ? <img src={rider.avatar} alt="Rider" className="w-full h-full object-cover" /> : <Bike size={18} className="text-orange-600" />}
@@ -342,18 +357,7 @@ function RiderLayoutInner({ children }) {
                         )}
                     </Link>
 
-                    <Link href="/rider/notifications" className="relative flex flex-col items-center gap-1 group py-1 min-w-[44px]">
-                        <motion.div
-                            className={`flex flex-col items-center gap-0.5 transition-colors ${pathname === '/rider/notifications' ? 'text-orange-600 dark:text-orange-500' : 'text-gray-400 dark:text-gray-500'}`}
-                            whileTap={{ scale: 0.9 }}
-                        >
-                            <Bell size={20} className={pathname === '/rider/notifications' ? 'fill-orange-600/10 dark:fill-orange-500/10' : ''} />
-                            <span className="text-[9px] font-black uppercase tracking-tighter">Alerts</span>
-                        </motion.div>
-                        {pathname === '/rider/notifications' && (
-                            <motion.div layoutId="navIndicator" className="absolute -bottom-1 w-1 h-1 bg-orange-600 dark:bg-orange-500 rounded-full" />
-                        )}
-                    </Link>
+
 
                     <Link href="/rider/settings" className="relative flex flex-col items-center gap-1 group py-1 min-w-[44px]">
                         <motion.div
