@@ -121,6 +121,7 @@ function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
 function RiderLayoutInner({ children }) {
     const { isOnline, toggleAvailability, loading, rider, isToggling, refreshProfile } = useRider();
     const pathname = usePathname();
+    const [assignmentQueue, setAssignmentQueue] = useState([]);
     const [assignmentModal, setAssignmentModal] = useState(null);
     const assignmentIdRef = useRef("");
     const alertTimerRef = useRef(null);
@@ -131,22 +132,29 @@ function RiderLayoutInner({ children }) {
     }, []);
 
     const showAssignment = useCallback((payload, source = "live") => {
-        const orderId = payload?.orderId || getOrderId(payload?.order);
+        const orderId = payload?.orderId || payload?.order?._id;
         if (!orderId) return;
-        if (assignmentIdRef.current === orderId) return;
-
-        assignmentIdRef.current = orderId;
-        setAssignmentModal({
-            ...payload,
-            orderId,
-            receivedAt: payload?.receivedAt || new Date().toISOString(),
-            source
+        
+        setAssignmentQueue(prev => {
+            // Avoid duplicates in queue
+            if (prev.some(a => (a.orderId || a.order?._id) === orderId)) return prev;
+            return [...prev, { ...payload, orderId, source }];
         });
     }, []);
 
+    // Effect to process the queue and show the next modal
+    useEffect(() => {
+        if (!assignmentModal && assignmentQueue.length > 0) {
+            const nextAssignment = assignmentQueue[0];
+            setAssignmentModal(nextAssignment);
+            assignmentIdRef.current = nextAssignment.orderId || nextAssignment.order?._id;
+            setAssignmentQueue(prev => prev.slice(1));
+        }
+    }, [assignmentQueue, assignmentModal]);
+
     const clearAssignment = useCallback(() => {
-        assignmentIdRef.current = "";
         setAssignmentModal(null);
+        assignmentIdRef.current = null;
         if (typeof window !== "undefined" && "speechSynthesis" in window) {
             window.speechSynthesis.cancel();
         }
@@ -195,10 +203,16 @@ function RiderLayoutInner({ children }) {
         };
 
         const handleAssignmentCancelled = (e) => {
-            if (assignmentIdRef.current === e.detail.orderId) {
+            const cancelledOrderId = e.detail.orderId;
+            
+            // 1. If it's the current modal, close it
+            if (assignmentIdRef.current === cancelledOrderId) {
                 toast(e.detail.message || "This order was accepted by another rider", { icon: 'ℹ️' });
                 clearAssignment();
             }
+            
+            // 2. Also remove from queue so it never pops up
+            setAssignmentQueue(prev => prev.filter(a => (a.orderId || a.order?._id) !== cancelledOrderId));
         };
 
         window.addEventListener('rider:new_assignment', handleNewAssignment);
