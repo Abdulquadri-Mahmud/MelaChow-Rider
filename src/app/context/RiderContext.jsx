@@ -140,6 +140,28 @@ export const RiderProvider = ({ children }) => {
     }, [socket, rider?._id, isOnline]);
 
     useEffect(() => {
+        if (!riderId) return;
+
+        const fetchCount = async () => {
+            // Only poll if socket is not providing real-time updates
+            if (wsConnected) return;
+            
+            try {
+                const { getRiderUnreadCount } = await import('@/app/lib/riderApi');
+                const data = await getRiderUnreadCount();
+                setUnreadCount(data.unreadCount || data.count || 0);
+            } catch (error) {
+                // Fail silently for notification count polling
+                // console.warn("Rider notification count poll failed:", error.message);
+            }
+        };
+
+        fetchCount();
+        const interval = setInterval(fetchCount, 60000); // 60s for unread count is plenty
+        return () => clearInterval(interval);
+    }, [riderId, wsConnected]);
+
+    useEffect(() => {
         if (!riderId || !wsConnected || !socket) return;
 
         socketService.subscribeToRider(riderId);

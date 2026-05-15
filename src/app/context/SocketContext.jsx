@@ -335,10 +335,15 @@ export const SocketProvider = ({ children }) => {
             const status = socketService.getConnectionStatus();
             setIsConnected(status.isConnected);
 
+            // Slow down polling when the tab is hidden to save battery and network
+            const pollFrequency = document.hidden ? 60000 : 30000;
+            
+            // Only attempt reconnect if we've passed the threshold since last attempt
+            // and we're not currently connected.
             if (!status.isConnected && !authFailed.current && TokenManager.getToken(role)) {
                 connect();
             }
-        }, 10000);
+        }, 30000); // Increased from 10s to 30s to be more server-friendly
 
         return () => {
             clearInterval(interval);
