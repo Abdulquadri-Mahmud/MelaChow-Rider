@@ -23,7 +23,9 @@ function getOrderId(order) {
 
 function isPendingAssignmentOrder(order) {
     const status = order?.orderStatus || order?.status;
-    return ASSIGNMENT_STATUSES.includes(status);
+    const hasRider = order?.riderId || order?.riderId?._id;
+    // If it has a rider assigned, it's no longer a "pending offer" for the broadcast modal
+    return ASSIGNMENT_STATUSES.includes(status) && !hasRider;
 }
 
 function speakRiderAssignment(message) {
