@@ -7,7 +7,6 @@ import { Bike, LayoutDashboard, History, Settings, Bell, Power, Loader2, Wallet,
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRider } from "@/app/context/RiderContext";
-import NewOrderModal from "@/app/components/rider/NewOrderModal";
 import PushNotificationPrompt from "@/app/components/notifications/PushNotificationPrompt";
 import PWAUpdateManager from "@/app/components/PWA/PWAUpdateManager";
 import PWAInstallPrompt from "@/app/components/PWA/PWAInstallPrompt";
@@ -15,48 +14,11 @@ import { registerServiceWorker } from "@/app/lib/pwa-utils";
 import { getActiveRiderOrder } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 
-const ASSIGNMENT_STATUSES = ["assigned", "pending_assignment", "rider_assigned"];
-
 function getOrderId(order) {
     return order?._id?.$oid || order?._id || order?.orderId || order?.id || "";
 }
 
-function isPendingAssignmentOrder(order) {
-    const status = order?.orderStatus || order?.status;
-    const riderAssignmentStatus = order?.riderAssignment?.status;
-    const hasRider = order?.riderId || order?.riderId?._id;
 
-    if (hasRider || ["accepted", "picked_up", "delivered"].includes(riderAssignmentStatus)) {
-        return false;
-    }
-
-    return ASSIGNMENT_STATUSES.includes(status);
-}
-
-function speakRiderAssignment(message) {
-    if (typeof window === "undefined") return;
-
-    try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) {
-            const context = new AudioContext();
-            const gain = context.createGain();
-            gain.gain.value = 0.045;
-            gain.connect(context.destination);
-
-            [0, 0.16, 0.32, 0.52].forEach((offset, index) => {
-                const oscillator = context.createOscillator();
-                oscillator.type = "sine";
-                oscillator.frequency.value = index % 2 === 0 ? 880 : 660;
-                oscillator.connect(gain);
-                oscillator.start(context.currentTime + offset);
-                oscillator.stop(context.currentTime + offset + 0.1);
-            });
-
-            window.setTimeout(() => context.close().catch(() => { }), 1200);
-        }
-    } catch { }
-}
 
 function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
     const { rider, unreadCount } = useRider();
@@ -121,152 +83,13 @@ function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
 function RiderLayoutInner({ children }) {
     const { isOnline, toggleAvailability, loading, rider, isToggling, refreshProfile } = useRider();
     const pathname = usePathname();
-    const [assignmentQueue, setAssignmentQueue] = useState([]);
-    const [assignmentModal, setAssignmentModal] = useState(null);
-    const assignmentIdRef = useRef("");
-    const alertTimerRef = useRef(null);
     const riderId = rider?._id || rider?.id;
 
     useEffect(() => {
         registerServiceWorker();
     }, []);
 
-    const showAssignment = useCallback((payload, source = "live") => {
-        const orderId = payload?.orderId || payload?.order?._id;
-        if (!orderId) return;
-        
-        setAssignmentQueue(prev => {
-            // Avoid duplicates in queue
-            if (prev.some(a => (a.orderId || a.order?._id) === orderId)) return prev;
-            return [...prev, { ...payload, orderId, source }];
-        });
-    }, []);
-
-    // Effect to process the queue and show the next modal
-    useEffect(() => {
-        if (!assignmentModal && assignmentQueue.length > 0) {
-            const nextAssignment = assignmentQueue[0];
-            setAssignmentModal(nextAssignment);
-            assignmentIdRef.current = nextAssignment.orderId || nextAssignment.order?._id;
-            setAssignmentQueue(prev => prev.slice(1));
-        }
-    }, [assignmentQueue, assignmentModal]);
-
-    const clearAssignment = useCallback(() => {
-        setAssignmentModal(null);
-        assignmentIdRef.current = null;
-        if (typeof window !== "undefined" && "speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
-        }
-    }, []);
-
-    const checkPendingAssignment = useCallback(async (showToast = false) => {
-        if (!riderId || !isOnline) return;
-
-        try {
-            const data = await getActiveRiderOrder(riderId);
-            const order = data?.data?.order || data?.order || (data?._id ? data : null);
-            const orderId = getOrderId(order);
-
-            if (orderId && isPendingAssignmentOrder(order)) {
-                const assignedRiderId = order?.riderId?._id || order?.riderId;
-                if (assignedRiderId && String(assignedRiderId) === String(riderId)) {
-                    return;
-                }
-
-                if (assignmentIdRef.current !== orderId) {
-                    showAssignment({ orderId, order, recovered: true }, "polling");
-                    if (showToast) {
-                        toast.success("Delivery assignment found. Please respond now.", { duration: 8000 });
-                    }
-                }
-                return;
-            }
-
-            if (assignmentIdRef.current && assignmentIdRef.current === orderId && !isPendingAssignmentOrder(order)) {
-                clearAssignment();
-            }
-        } catch (error) {
-            if (error?.response?.status !== 404) {
-                console.error("Failed to check rider assignment:", error);
-            }
-        }
-    }, [clearAssignment, isOnline, riderId, showAssignment]);
-
-    useEffect(() => {
-        const handleNewAssignment = (e) => {
-            showAssignment(e.detail, "socket");
-        };
-
-        const handleAssignmentAction = () => {
-            clearAssignment();
-        };
-
-        const handleAssignmentCancelled = (e) => {
-            const cancelledOrderId = e.detail.orderId;
-            
-            // 1. If it's the current modal, close it
-            if (assignmentIdRef.current === cancelledOrderId) {
-                toast(e.detail.message || "This order was accepted by another rider", { icon: 'ℹ️' });
-                clearAssignment();
-            }
-            
-            // 2. Also remove from queue so it never pops up
-            setAssignmentQueue(prev => prev.filter(a => (a.orderId || a.order?._id) !== cancelledOrderId));
-        };
-
-        window.addEventListener('rider:new_assignment', handleNewAssignment);
-        window.addEventListener('rider:assignment_action', handleAssignmentAction);
-        window.addEventListener('rider:assignment_cancelled', handleAssignmentCancelled);
-        return () => {
-            window.removeEventListener('rider:new_assignment', handleNewAssignment);
-            window.removeEventListener('rider:assignment_action', handleAssignmentAction);
-            window.removeEventListener('rider:assignment_cancelled', handleAssignmentCancelled);
-        };
-    }, [clearAssignment, showAssignment]);
-
-    useEffect(() => {
-        checkPendingAssignment(false);
-
-        const poll = () => checkPendingAssignment(false);
-        const interval = window.setInterval(poll, document.hidden ? 15000 : 6000);
-        const handleFocus = () => checkPendingAssignment(true);
-        const handleVisibility = () => {
-            if (!document.hidden) checkPendingAssignment(true);
-        };
-
-        window.addEventListener("focus", handleFocus);
-        document.addEventListener("visibilitychange", handleVisibility);
-
-        return () => {
-            window.clearInterval(interval);
-            window.removeEventListener("focus", handleFocus);
-            document.removeEventListener("visibilitychange", handleVisibility);
-        };
-    }, [checkPendingAssignment]);
-
-    useEffect(() => {
-        if (!assignmentModal?.orderId) {
-            if (alertTimerRef.current) {
-                window.clearInterval(alertTimerRef.current);
-                alertTimerRef.current = null;
-            }
-            return;
-        }
-
-        const message = "New delivery assigned. Please accept or reject this order now.";
-        speakRiderAssignment(message);
-        alertTimerRef.current = window.setInterval(() => {
-            speakRiderAssignment(message);
-        }, 12000);
-
-        return () => {
-            if (alertTimerRef.current) {
-                window.clearInterval(alertTimerRef.current);
-                alertTimerRef.current = null;
-            }
-        };
-    }, [assignmentModal?.orderId]);
+    // Bulletin Board architecture handles assignment display in the dashboard route.
 
     if (loading) {
         return (
@@ -397,17 +220,6 @@ function RiderLayoutInner({ children }) {
                 </nav>
             </div>
 
-            <AnimatePresence>
-                {assignmentModal && (
-                    <NewOrderModal
-                        riderId={rider?._id || rider?.id}
-                        assignmentData={assignmentModal}
-                        onClose={clearAssignment}
-                        onRefresh={refreshProfile}
-                        persistent
-                    />
-                )}
-            </AnimatePresence>
             <PWAUpdateManager />
             <PWAInstallPrompt />
             <PushNotificationPrompt />

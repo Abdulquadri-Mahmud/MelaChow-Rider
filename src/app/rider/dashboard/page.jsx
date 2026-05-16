@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -8,14 +9,14 @@ import {
     Wallet, Star, Phone, Loader2, Activity, RefreshCcw
 } from "lucide-react";
 import { useRider } from "@/app/context/RiderContext";
-import { getActiveRiderOrder, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery } from "@/app/lib/riderApi";
+import { getActiveRiderOrder, getPendingOffers, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery, acceptOffer, toggleRiderAvailability } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
-import { toggleRiderAvailability } from "@/app/lib/riderApi";
 
 export default function RiderDashboard() {
     const { rider, isOnline, refreshProfile } = useRider();
     const [activeOrder, setActiveOrder] = useState(null);
+    const [pendingOffers, setPendingOffers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [localAssignmentStatus, setLocalAssignmentStatus] = useState(null);
@@ -69,26 +70,46 @@ export default function RiderDashboard() {
             ? "Head to Store"
             : "Out for Delivery";
 
-    const fetchActiveOrder = async () => {
-        if (!riderId) return;
-        try {
-            const data = await getActiveRiderOrder(riderId);
+    const { data: queryData, refetch: refetchDashboardQuery } = useQuery({
+        queryKey: ["riderDashboardData", riderId, isOnline],
+        queryFn: async () => {
+            if (!riderId) return { activeOrder: null, pendingOffers: [] };
+            
+            try {
+                const data = await getActiveRiderOrder(riderId);
+                const order = data?.data?.order || data?.order || (data?._id ? data : null);
+                
+                let offers = [];
+                if (!order && isOnline) {
+                    const offersData = await getPendingOffers(riderId);
+                    offers = offersData?.data?.offers || offersData?.offers || [];
+                }
+                return { activeOrder: order, pendingOffers: offers };
+            } catch (error) {
+                if (error?.response?.status !== 404) {
+                    console.error("Failed to fetch dashboard data:", error);
+                }
+                return { activeOrder: null, pendingOffers: [] };
+            }
+        },
+        enabled: !!riderId,
+        refetchInterval: 10000, // Background refresh every 10 seconds!
+        refetchOnWindowFocus: true, // Refresh on tab focus!
+    });
 
-            // console.log(data);
-
-            const order = data?.data?.order || data?.order || (data?._id ? data : null);
-            setActiveOrder(order);
-            if (!order) {
+    useEffect(() => {
+        if (queryData) {
+            setActiveOrder(queryData.activeOrder);
+            setPendingOffers(queryData.pendingOffers);
+            if (!queryData.activeOrder) {
                 setLocalAssignmentStatus(null);
             }
-        } catch (error) {
-            if (error?.response?.status !== 404) {
-                console.error("Failed to fetch active order:", error);
-            }
-            setActiveOrder(null);
-        } finally {
             setLoading(false);
         }
+    }, [queryData]);
+
+    const fetchDashboardData = async () => {
+        refetchDashboardQuery();
     };
 
     // console.log(activeOrder);
@@ -96,7 +117,7 @@ export default function RiderDashboard() {
         setIsRefreshing(true);
         try {
             await Promise.all([
-                fetchActiveOrder(),
+                fetchDashboardData(),
                 refreshProfile()
             ]);
             toast.success("Dashboard refreshed");
@@ -113,12 +134,12 @@ export default function RiderDashboard() {
             return;
         }
 
-        fetchActiveOrder();
+        fetchDashboardData();
 
         const handleNewAssignment = () => {
             setLocalAssignmentStatus(null);
-            fetchActiveOrder();
-            toast.success("New delivery assigned! 🛵", { duration: 8000 });
+            fetchDashboardData();
+            toast.success("New delivery available! 🛵", { duration: 8000 });
         };
 
         const handleAssignmentAction = (event) => {
@@ -131,13 +152,13 @@ export default function RiderDashboard() {
                     status: "rider_assigned",
                     orderStatus: "rider_assigned"
                 }) : event.detail?.order || prev);
-                Promise.allSettled([refreshProfile(), fetchActiveOrder()]);
+                Promise.allSettled([refreshProfile(), fetchDashboardData()]);
             }
 
             if (action === "reject" || action === "timeout") {
                 setLocalAssignmentStatus("rejected");
                 setActiveOrder(null);
-                Promise.allSettled([refreshProfile(), fetchActiveOrder()]);
+                Promise.allSettled([refreshProfile(), fetchDashboardData()]);
             }
         };
 
@@ -147,7 +168,7 @@ export default function RiderDashboard() {
             window.removeEventListener("rider:new_assignment", handleNewAssignment);
             window.removeEventListener("rider:assignment_action", handleAssignmentAction);
         };
-    }, [riderId, refreshProfile]);
+    }, [riderId, refreshProfile, isOnline]);
 
     useEffect(() => {
         if (activeOrder?._id) {
@@ -169,7 +190,7 @@ export default function RiderDashboard() {
             if (action === "pickup") {
                 await riderPickedUpOrder(riderId, orderId);
                 toast.success("Order picked up! Head to the customer.");
-                fetchActiveOrder();
+                fetchDashboardData();
             } else if (action === "deliver") {
                 // Step 1: request OTP
                 setOtpState(prev => ({ ...prev, sending: true }));
@@ -184,21 +205,7 @@ export default function RiderDashboard() {
                 });
                 toast.success(res.message || "OTP requested!");
             } else if (action === "accept") {
-                if (!isPendingAssignment) {
-                    toast("This delivery assignment is already in progress.");
-                    await Promise.allSettled([refreshProfile(), fetchActiveOrder()]);
-                    return;
-                }
-                setLocalAssignmentStatus("accepted");
-                setActiveOrder(prev => prev ? ({
-                    ...prev,
-                    status: "rider_assigned",
-                    orderStatus: "rider_assigned"
-                }) : prev);
-                await toggleRiderAvailability(riderId, "on_delivery");
-                toast.success("Delivery Accepted! 🛵");
-                await refreshProfile();
-                fetchActiveOrder();
+                // For bulletin board, action accept comes from the offer card directly
             } else if (action === "reject") {
                 if (!isPendingAssignment) {
                     toast("This delivery assignment has already been handled.");
@@ -224,7 +231,7 @@ export default function RiderDashboard() {
             await riderConfirmDelivery(riderId, activeOrder._id, otpState.otp.trim());
             toast.success("Order delivered! Well done. 🎉");
             setOtpState({ step: "idle", otp: "", sending: false, confirming: false, method: "", message: "" });
-            fetchActiveOrder();
+            fetchDashboardData();
             // Refresh profile to update earnings automatically
             await refreshProfile();
         } catch (error) {
@@ -651,23 +658,78 @@ export default function RiderDashboard() {
                         key="idle"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className={`p-10 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${isOnline
-                            ? "bg-orange-50 dark:bg-orange-600/5 border-orange-200 dark:border-orange-500/20"
-                            : "bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20 opacity-60"
-                            }`}
+                        className="space-y-6"
                     >
-                        <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${isOnline ? "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500" : "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500"
-                            }`}>
-                            <Bike size={40} className={isOnline ? "animate-bounce" : ""} />
-                        </div>
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
-                            {isOnline ? "Waiting for Orders..." : "You are Offline"}
-                        </h3>
-                        <p className="text-gray-500 text-sm font-medium max-w-[220px]">
-                            {isOnline
-                                ? "Stay active in the area for faster assignments."
-                                : "Hit the power button in the header to start receiving jobs."}
-                        </p>
+                        {isOnline && pendingOffers.length > 0 ? (
+                            <div className="space-y-4">
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                    <Package size={20} className="text-orange-600" />
+                                    Available Deliveries ({pendingOffers.length})
+                                </h3>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {pendingOffers.map((offer) => (
+                                        <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:border-orange-500/30 transition-all">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-100 dark:bg-green-500/20 rounded-full mb-3">
+                                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                                        <span className="text-[10px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">New Offer</span>
+                                                    </div>
+                                                    <h4 className="text-lg font-black text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-xs">
+                                                        {offer.restaurantName}
+                                                    </h4>
+                                                    <p className="text-xs text-gray-500 dark:text-white/60 font-medium truncate mt-0.5">
+                                                        To: {offer.deliveryFullAddress}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-xl font-black text-gray-900 dark:text-white">
+                                                        ₦{Number(offer.deliveryFee || 600).toLocaleString()}
+                                                    </div>
+                                                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Payout</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between gap-4 mt-6">
+                                                <button
+                                                    onClick={async () => {
+                                                        const id = toast.loading("Accepting...");
+                                                        try {
+                                                            await acceptOffer(riderId, offer._id);
+                                                            toast.success("Delivery Accepted! 🛵", { id });
+                                                            await Promise.allSettled([fetchDashboardData(), refreshProfile()]);
+                                                        } catch (e) {
+                                                            toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
+                                                        }
+                                                    }}
+                                                    className="flex-1 h-12 bg-orange-600 text-white rounded-xl font-black text-sm flex items-center justify-center transition-all active:scale-95"
+                                                >
+                                                    ACCEPT JOB
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className={`p-10 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${isOnline
+                                ? "bg-orange-50 dark:bg-orange-600/5 border-orange-200 dark:border-orange-500/20"
+                                : "bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20 opacity-60"
+                                }`}>
+                                <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${isOnline ? "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500" : "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500"
+                                    }`}>
+                                    <Bike size={40} className={isOnline ? "animate-bounce" : ""} />
+                                </div>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+                                    {isOnline ? "Waiting for Orders..." : "You are Offline"}
+                                </h3>
+                                <p className="text-gray-500 text-sm font-medium max-w-[220px]">
+                                    {isOnline
+                                        ? "Stay active in the area for faster assignments."
+                                        : "Hit the power button in the header to start receiving jobs."}
+                                </p>
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
