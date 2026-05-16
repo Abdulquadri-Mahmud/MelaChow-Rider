@@ -71,6 +71,16 @@ export const getActiveRiderOrder = async (riderId) => {
     return response.data;
 };
 
+export const getPendingOffers = async (riderId) => {
+    const response = await API.get(`/riders/${riderId}/pending-offers`);
+    return response.data;
+};
+
+export const acceptOffer = async (riderId, orderId) => {
+    const response = await API.patch(`/riders/${riderId}/status`, { status: "on_delivery", orderId });
+    return response.data;
+};
+
 export const riderPickedUpOrder = async (riderId, orderId) => {
     const response = await API.patch(`/riders/${riderId}/picked-up`, { orderId });
     return response.data;
