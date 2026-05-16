@@ -160,4 +160,17 @@ export const getRiderWithdrawalHistory = async (riderId) => {
     return response.data;
 };
 
+// Public Bank Discovery (for registration onboarding)
+export const getPublicBankList = async () => {
+    const response = await API.get('/wallet/public/banks');
+    return response.data;
+};
+
+export const resolvePublicAccount = async (accountNumber, bankCode) => {
+    const response = await API.get('/wallet/public/resolve-account', {
+        params: { account_number: accountNumber, bank_code: bankCode }
+    });
+    return response.data;
+};
+
 export default API;
