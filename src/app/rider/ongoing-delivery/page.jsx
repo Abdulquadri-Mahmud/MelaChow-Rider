@@ -191,7 +191,7 @@ export default function OngoingDeliveryPage() {
                 </div>
             </div>
 
-            <div className="max-w-md mx-auto px-4 mt-6">
+            <div className="max-w-md mx-auto mt-6">
                 <div className="relative overflow-hidden bg-white dark:bg-[#1A1D23] rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm p-5">
                     {/* Header Badge */}
                     <div className="flex justify-between items-start mb-6">
