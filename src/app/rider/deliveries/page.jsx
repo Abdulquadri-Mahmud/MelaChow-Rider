@@ -47,7 +47,7 @@ export default function AvailableDeliveriesPage() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-24 text-zinc-900 dark:text-zinc-100">
             {/* Elegant Header with Back Button */}
-            <div className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-zinc-900/80 border-b border-zinc-100 dark:border-zinc-800/50 px-4 py-4 flex items-center justify-between">
+            <div className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-zinc-900/80 border-b border-zinc-100 dark:border-zinc-800/50 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => router.back()}
