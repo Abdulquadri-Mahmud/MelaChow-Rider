@@ -72,7 +72,7 @@ export default function AvailableDeliveriesPage() {
                 </button>
             </div>
 
-            <div className="max-w-md mx-auto px-4 mt-6">
+            <div className="max-w-md mx-auto mt-6">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <Loader2 size={36} className="text-orange-600 animate-spin mb-4" />

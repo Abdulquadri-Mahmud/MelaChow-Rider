@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Bike, Navigation, MapPin, Package, CheckCircle2, AlertCircle,
@@ -14,6 +15,7 @@ import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
 
 export default function RiderDashboard() {
+    const router = useRouter();
     const { rider, isOnline, refreshProfile } = useRider();
     const [activeOrder, setActiveOrder] = useState(null);
     const [pendingOffers, setPendingOffers] = useState([]);
@@ -107,6 +109,12 @@ export default function RiderDashboard() {
             setLoading(false);
         }
     }, [queryData]);
+
+    useEffect(() => {
+        if (activeOrder && !loading) {
+            router.push("/rider/ongoing-delivery");
+        }
+    }, [activeOrder, loading]);
 
     const fetchDashboardData = async () => {
         refetchDashboardQuery();
@@ -336,321 +344,34 @@ export default function RiderDashboard() {
                 </Link>
             </div>
 
-            {/* Active Order */}
+            {/* Active Order Pulsing Alert Banner */}
             <AnimatePresence mode="wait">
                 {activeOrder && (
                     <motion.div
-                        key="active"
-                        initial={{ opacity: 0, y: 20 }}
+                        key="active-banner"
+                        initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="relative overflow-hidden group"
+                        onClick={() => router.push("/rider/ongoing-delivery")}
+                        className="relative overflow-hidden group cursor-pointer bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-2xl p-4 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all border border-orange-400"
                     >
-                        {/* Premium Background with Glow */}
-                        <div className="absolute inset-0 bg-orange-50/50 dark:bg-gradient-to-br dark:from-orange-800 dark:to-orange-950 rounded-[20px] border border-orange-100 dark:border-white/5 transition-all" />
-                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-orange-200/20 dark:bg-white/10 rounded-full blur-3xl opacity-50 transition-all" />
-                        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-orange-100/20 dark:bg-orange-300/10 rounded-full blur-3xl opacity-30 transition-all" />
-
-                        <div className="relative z-10 p-4 md:p-5">
-                            {/* Header Section */}
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="space-y-0.5">
-                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-orange-100 dark:bg-white/20 backdrop-blur-md rounded-full border border-orange-200 dark:border-white/20 text-[9px] font-black uppercase tracking-widest text-orange-700 dark:text-white">
-                                        <span className="w-1 h-1 bg-orange-500 rounded-full animate-ping" />
-                                        Live Job
-                                    </div>
-                                    <h2 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
-                                        {activeOrderTitle}
-                                    </h2>
-                                    <p className="text-gray-400 dark:text-white/50 text-[10px] font-bold uppercase tracking-tight">
-                                        Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)}
-                                    </p>
-                                </div>
-                                <div className="w-11 h-11 rounded-xl bg-orange-600 dark:bg-white/10 backdrop-blur-md border border-orange-500 dark:border-white/10 flex items-center justify-center">
-                                    <Bike size={24} className="text-white animate-pulse" />
-                                </div>
+                        <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
+                                <Bike size={20} className="text-white animate-bounce" />
                             </div>
-
-                            {/* Route Visualization */}
-                            <div className="relative space-y-4 mb-4">
-                                {/* Vertical Path Line */}
-                                <div className="absolute left-[15px] top-5 bottom-5 w-0.5 bg-orange-200 dark:bg-white/20 border-dashed border-l" />
-
-                                {/* Pickup */}
-                                <div className="flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 z-10 border border-orange-100 dark:border-white/20">
-                                        <Package size={16} className="text-orange-600 dark:text-white" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="text-[9px] font-black text-orange-600/60 dark:text-white/50 uppercase tracking-widest mb-0.5">Pickup Point</div>
-                                        <h4 className="text-gray-900 dark:text-white font-black text-sm truncate">
-                                            {activeOrder.restaurantName || activeOrder.restaurantId?.storeName || activeOrder.restaurantId?.name || "Restaurant"}
-                                        </h4>
-                                        <p className="text-gray-500 dark:text-white/70 text-[11px] font-medium truncate">
-                                            {activeOrder.restaurantId?.fullAddress ||
-                                                (activeOrder.restaurantId?.address ? `${activeOrder.restaurantId.address.street}, ${activeOrder.restaurantId.address.city}, ${activeOrder.restaurantId.address.state}` : "") ||
-                                                activeOrder.restaurantName || "Restaurant Address"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Drop-off */}
-                                <div className="flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-orange-600 dark:bg-white flex items-center justify-center shrink-0 z-10">
-                                        <MapPin size={16} className="text-white dark:text-orange-600" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="text-[9px] font-black text-orange-600/60 dark:text-white/50 uppercase tracking-widest mb-0.5">Delivery Point</div>
-                                        <h4 className="text-gray-900 dark:text-white font-black text-sm truncate">
-                                            {activeOrder.userName || (activeOrder.userId?.firstname ? `${activeOrder.userId.firstname} ${activeOrder.userId.lastname || ''}` : "Customer")}
-                                        </h4>
-                                        <p className="text-gray-500 dark:text-white/70 text-[11px] font-medium line-clamp-2">
-                                            {activeOrder.deliveryFullAddress ||
-                                                (activeOrder.deliveryAddress?.addressLine
-                                                    ? `${activeOrder.deliveryAddress.addressLine}, ${activeOrder.deliveryAddress.city || ''}, ${activeOrder.deliveryAddress.state || ''}`.replace(/,,/g, ',').trim()
-                                                    : activeOrder.deliveryAddress?.address ||
-                                                    activeOrder.userOrderId?.deliveryAddress?.addressLine ||
-                                                    "Customer Address")}
-                                        </p>
-                                    </div>
-                                </div>
+                            <div className="min-w-0 flex-1">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[8px] font-black uppercase tracking-wider mb-1">
+                                    <span className="w-1 h-1 bg-white rounded-full animate-ping" />
+                                    Active Job Underway
+                                </span>
+                                <h3 className="font-black text-sm tracking-tight leading-tight">
+                                    {activeOrder.restaurantName || "Ongoing Delivery"} ➔ {activeOrder.userName || "Customer"}
+                                </h3>
+                                <p className="text-[10px] text-orange-100 font-bold uppercase mt-0.5">
+                                    Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)} • Tap to view route details & complete status
+                                </p>
                             </div>
-
-                            {/* Order Summary */}
-                            {activeOrder?.items && activeOrder.items.length > 0 && (
-                                <div className="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-3.5 mb-4 border border-orange-100 dark:border-white/5">
-                                    <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                                        <Package size={14} className="text-orange-600 dark:text-orange-400" />
-                                        Order Summary
-                                    </h3>
-                                    <div className="space-y-2.5">
-                                        {activeOrder.items.map((item, idx) => {
-                                            const itemName = item.name || item.variant?.name || item.foodName || "Item";
-                                            const quantity = Number(item.quantity) || 1;
-                                            const options = item.selected_options || [];
-                                            const portionLabel = item.portion_label || item.portion || "";
-                                            
-                                            let portionText = portionLabel || (quantity > 1 ? "portions" : "portion");
-
-                                            let fullSentence = `Deliver ${quantity} ${portionText} of ${itemName}`;
-                                            if (options.length > 0) {
-                                                const optionsTextList = options.map((opt) => `${Number(opt.quantity) > 0 ? (Number(opt.quantity) * quantity) + 'x ' : ''}${opt.label || opt.name}`);
-                                                fullSentence += `, with ${optionsTextList.length === 1 ? optionsTextList[0] : optionsTextList.length === 2 ? optionsTextList.join(' and ') : optionsTextList.slice(0, -1).join(', ') + ', and ' + optionsTextList.slice(-1)}`;
-                                            }
-                                            fullSentence += ".";
-
-                                            return (
-                                                <div key={idx} className="border-b border-gray-100 dark:border-white/5 last:border-0 pb-2 last:pb-0">
-                                                    <div className="flex gap-2">
-                                                        <div className="p-1 h-fit bg-slate-100 dark:bg-slate-800 rounded text-slate-500">
-                                                            <Package size={10} />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-bold text-gray-900 dark:text-gray-100 leading-snug">
-                                                                {fullSentence}
-                                                            </p>
-                                                            {item.note && (
-                                                                <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-0.5 italic font-medium">
-                                                                    Note: {item.note}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    <div className="mt-2.5 pt-2.5 border-t border-gray-100 dark:border-white/10 flex justify-between items-center px-1">
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Items</span>
-                                        <span className="text-xs font-black text-gray-900 dark:text-white">
-                                            {activeOrder.items.reduce((acc, item) => acc + (item.quantity || 1), 0)}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* General Order Note */}
-                            {activeOrder?.note && (
-                                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 mb-4 border border-orange-100 dark:border-orange-500/20 flex gap-2.5 items-start">
-                                    <AlertCircle size={16} className="text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
-                                    <div>
-                                        <h4 className="text-[9px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 mb-0.5">Customer Note</h4>
-                                        <p className="text-xs font-medium text-orange-900 dark:text-orange-100">{activeOrder.note}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Customer & Call Section */}
-                            <div className="bg-white dark:bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-4 flex items-center justify-between border border-orange-100 dark:border-white/5">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
-                                        <Star size={14} className="text-orange-600 dark:text-orange-300" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[9px] font-black text-gray-400 dark:text-white/40 uppercase tracking-widest leading-none mb-1">Customer</p>
-                                        <p className="text-gray-900 dark:text-white font-bold text-xs leading-none">
-                                            {activeOrder.userName || activeOrder.userId?.firstname || "Guest"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <a
-                                    href={`tel:${activeOrder.userPhone || activeOrder.userId?.phone || activeOrder.userOrderId?.phone || ''}`}
-                                    className="h-8 px-3 rounded-lg bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center gap-1.5 font-black text-[10px] hover:bg-orange-700 dark:hover:bg-orange-50 transition-colors active:scale-95"
-                                >
-                                    <Phone size={12} />
-                                    CALL
-                                </a>
-                            </div>
-
-                            {/* 🔐 NEW: Code Sent Notice */}
-                            {activeOrder?.deliveryOtp && (
-                                <div className="bg-zinc-900 dark:bg-white rounded-xl p-3 mb-4 flex items-center gap-3 border border-zinc-800 dark:border-zinc-200 shadow-xl shadow-black/10">
-                                    <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center shrink-0">
-                                        <CheckCircle2 size={16} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none mb-1">Confirmation Ready</p>
-                                        <p className="text-white dark:text-zinc-900 font-bold text-[11px]">
-                                            Delivery code has been sent to the customer's portal.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Actions Zone */}
-                            <div className="grid grid-cols-2 gap-3">
-                                {isPendingAssignment ? (
-                                    <>
-                                        <button
-                                            onClick={() => handleAction("reject")}
-                                            className="h-11 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-red-500/10 dark:hover:bg-red-500/20 text-gray-600 dark:text-white font-black text-xs transition-all border border-gray-200 dark:border-white/10"
-                                        >
-                                            REJECT
-                                        </button>
-                                        <button
-                                            onClick={() => handleAction("accept")}
-                                            className="h-11 rounded-xl bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center justify-center font-black text-xs transition-all active:scale-95"
-                                        >
-                                            <CheckCircle2 size={16} className="mr-1.5" />
-                                            ACCEPT
-                                        </button>
-                                    </>
-                                ) : isOnDelivery || isDeliveringToCustomer ? (
-                                    <>
-                                        <button
-                                            onClick={() => {
-                                                let targetAddr = "";
-
-                                                if (isHeadingToStore) {
-                                                    // Resolve restaurant address
-                                                    const restAddr = activeOrder.restaurantId?.address;
-                                                    targetAddr = activeOrder.restaurantId?.fullAddress ||
-                                                        (restAddr ? `${restAddr.street || ''}, ${restAddr.city || ''}, ${restAddr.state || ''}`.replace(/^[ ,]+|[ ,]+$/g, '').replace(/, ,/g, ',') : '') ||
-                                                        activeOrder.restaurantName || "";
-                                                } else {
-                                                    // Resolve customer address
-                                                    targetAddr = activeOrder.deliveryFullAddress ||
-                                                        (activeOrder.deliveryAddress?.addressLine
-                                                            ? `${activeOrder.deliveryAddress.addressLine}, ${activeOrder.deliveryAddress.city || ''}, ${activeOrder.deliveryAddress.state || ''}`.replace(/,,/g, ',').trim()
-                                                            : activeOrder.deliveryAddress?.address || activeOrder.userOrderId?.deliveryAddress?.addressLine || "");
-                                                }
-
-                                                if (!targetAddr || targetAddr.trim() === "") {
-                                                    toast.error("Location address not found");
-                                                    return;
-                                                }
-
-                                                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetAddr)}`);
-                                            }}
-                                            className="h-11 rounded-xl bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/20 text-gray-900 dark:text-white font-black text-xs flex items-center justify-center transition-all border border-gray-200 dark:border-white/10"
-                                        >
-                                            <Navigation size={16} className="mr-1.5 text-orange-600 dark:text-orange-300" />
-                                            OPEN MAPS
-                                        </button>
-                                        {isHeadingToStore ? (
-                                            <button
-                                                onClick={() => handleAction("pickup")}
-                                                className="h-11 rounded-xl bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center justify-center font-black text-xs transition-all active:scale-95"
-                                            >
-                                                <Package size={16} className="mr-1.5" />
-                                                PICKED UP
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleAction("deliver")}
-                                                disabled={otpState.sending}
-                                                className="h-11 rounded-xl bg-orange-600 dark:bg-orange-400 text-white dark:text-orange-900 flex items-center justify-center font-black text-xs transition-all active:scale-95 disabled:opacity-60"
-                                            >
-                                                {otpState.sending
-                                                    ? <Loader2 size={16} className="animate-spin" />
-                                                    : <><CheckCircle2 size={16} className="mr-1.5" />DELIVERED</>}
-                                            </button>
-                                        )}
-                                    </>
-                                ) : (
-                                    <p className="col-span-2 text-center text-gray-400 dark:text-white/60 text-[10px] font-bold py-2">Order status: {activeOrder.status}</p>
-                                )}
-                            </div>
-
-                            {/* OTP Verification Modal */}
-                            <AnimatePresence>
-                                {otpState.step === "awaiting_otp" && (
-                                    <div className="fixed inset-0 z-50 flex bg-white dark:bg-[#1A1D23]">
-                                        <motion.div 
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="absolute inset-0 bg-black/60 backdrop-blur-sm shadow-2xl"
-                                        />
-                                        <motion.div 
-                                            initial={{ opacity: 0, y: 100 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 100 }}
-                                            className="relative w-full min-h-screen bg-white dark:bg-[#1A1D23] p-6 overflow-y-auto flex items-center justify-center"
-                                        >
-                                            <div className="flex w-full max-w-sm flex-col items-center text-center space-y-4">
-                                                <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center">
-                                                    <AlertCircle size={32} className="text-orange-600 dark:text-orange-500" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Verify Delivery</h3>
-                                                    <p className="text-[11px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-300 mt-1">
-                                                        {otpState.message || "Ask the customer for the code sent to them"}
-                                                    </p>
-                                                </div>
-
-                                                <div className="w-full space-y-4">
-                                                    <input
-                                                        type="number"
-                                                        inputMode="numeric"
-                                                        pattern="[0-9]*"
-                                                        autoFocus
-                                                        maxLength={6}
-                                                        value={otpState.otp}
-                                                        onChange={e => {
-                                                            if (e.target.value.length > 6) return;
-                                                            setOtpState(prev => ({ ...prev, otp: e.target.value }));
-                                                        }}
-                                                        placeholder="0 0 0 0 0 0"
-                                                        className="w-full h-16 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-4 text-3xl font-black text-center tracking-[0.5em] text-zinc-900 dark:text-white outline-none focus:border-orange-500 caret-orange-500"
-                                                    />
-                                                    <button
-                                                        onClick={handleConfirmOTP}
-                                                        disabled={otpState.otp.trim().length !== 6 || otpState.confirming}
-                                                        className="w-full h-14 rounded-2xl bg-orange-600 text-white font-black text-sm disabled:opacity-50 active:scale-95 transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2"
-                                                    >
-                                                        {otpState.confirming ? <Loader2 size={18} className="animate-spin" /> : <><CheckCircle2 size={18} /> CONFIRM DELIVERY</>}
-                                                    </button>
-                                                    <div className="py-2 text-[10px] text-zinc-400 font-black uppercase tracking-widest">
-                                                        Code verification required
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    </div>
-                                )}
-                            </AnimatePresence>
                         </div>
                     </motion.div>
                 )}
