@@ -80,7 +80,7 @@ export default function RiderDashboard() {
                 const order = data?.data?.order || data?.order || (data?._id ? data : null);
                 
                 let offers = [];
-                if (!order && isOnline) {
+                if (isOnline) {
                     const offersData = await getPendingOffers(riderId);
                     offers = offersData?.data?.offers || offersData?.offers || [];
                 }
@@ -338,7 +338,7 @@ export default function RiderDashboard() {
 
             {/* Active Order */}
             <AnimatePresence mode="wait">
-                {activeOrder ? (
+                {activeOrder && (
                     <motion.div
                         key="active"
                         initial={{ opacity: 0, y: 20 }}
@@ -351,42 +351,42 @@ export default function RiderDashboard() {
                         <div className="absolute -right-20 -top-20 w-64 h-64 bg-orange-200/20 dark:bg-white/10 rounded-full blur-3xl opacity-50 transition-all" />
                         <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-orange-100/20 dark:bg-orange-300/10 rounded-full blur-3xl opacity-30 transition-all" />
 
-                        <div className="relative z-10 md:p-6 p-3 md:p-8">
+                        <div className="relative z-10 p-4 md:p-5">
                             {/* Header Section */}
-                            <div className="flex justify-between items-start mb-8">
-                                <div className="space-y-1">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 dark:bg-white/20 backdrop-blur-md rounded-full border border-orange-200 dark:border-white/20 text-[10px] font-black uppercase tracking-widest text-orange-700 dark:text-white">
-                                        <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping" />
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="space-y-0.5">
+                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-orange-100 dark:bg-white/20 backdrop-blur-md rounded-full border border-orange-200 dark:border-white/20 text-[9px] font-black uppercase tracking-widest text-orange-700 dark:text-white">
+                                        <span className="w-1 h-1 bg-orange-500 rounded-full animate-ping" />
                                         Live Job
                                     </div>
-                                    <h2 className="text-3xl font-black text-gray-900 dark:text-white leading-tight">
+                                    <h2 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
                                         {activeOrderTitle}
                                     </h2>
-                                    <p className="text-gray-500 dark:text-white/70 text-xs font-bold uppercase tracking-tighter">
+                                    <p className="text-gray-400 dark:text-white/50 text-[10px] font-bold uppercase tracking-tight">
                                         Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)}
                                     </p>
                                 </div>
-                                <div className="w-14 h-14 rounded-2xl bg-orange-600 dark:bg-white/10 backdrop-blur-md border border-orange-500 dark:border-white/10 flex items-center justify-center">
-                                    <Bike size={32} className="text-white animate-pulse" />
+                                <div className="w-11 h-11 rounded-xl bg-orange-600 dark:bg-white/10 backdrop-blur-md border border-orange-500 dark:border-white/10 flex items-center justify-center">
+                                    <Bike size={24} className="text-white animate-pulse" />
                                 </div>
                             </div>
 
                             {/* Route Visualization */}
-                            <div className="relative space-y-8 mb-8">
+                            <div className="relative space-y-4 mb-4">
                                 {/* Vertical Path Line */}
-                                <div className="absolute left-[19px] top-6 bottom-6 w-0.5 bg-orange-200 dark:bg-white/20 border-dashed border-l" />
+                                <div className="absolute left-[15px] top-5 bottom-5 w-0.5 bg-orange-200 dark:bg-white/20 border-dashed border-l" />
 
                                 {/* Pickup */}
-                                <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 z-10 border border-orange-100 dark:border-white/20">
-                                        <Package size={20} className="text-orange-600 dark:text-white" />
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 z-10 border border-orange-100 dark:border-white/20">
+                                        <Package size={16} className="text-orange-600 dark:text-white" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-[10px] font-black text-orange-600/60 dark:text-white/50 uppercase tracking-widest mb-0.5">Pickup Point</div>
-                                        <h4 className="text-gray-900 dark:text-white font-black text-base truncate">
+                                        <div className="text-[9px] font-black text-orange-600/60 dark:text-white/50 uppercase tracking-widest mb-0.5">Pickup Point</div>
+                                        <h4 className="text-gray-900 dark:text-white font-black text-sm truncate">
                                             {activeOrder.restaurantName || activeOrder.restaurantId?.storeName || activeOrder.restaurantId?.name || "Restaurant"}
                                         </h4>
-                                        <p className="text-gray-500 dark:text-white/70 text-xs font-medium truncate">
+                                        <p className="text-gray-500 dark:text-white/70 text-[11px] font-medium truncate">
                                             {activeOrder.restaurantId?.fullAddress ||
                                                 (activeOrder.restaurantId?.address ? `${activeOrder.restaurantId.address.street}, ${activeOrder.restaurantId.address.city}, ${activeOrder.restaurantId.address.state}` : "") ||
                                                 activeOrder.restaurantName || "Restaurant Address"}
@@ -395,16 +395,16 @@ export default function RiderDashboard() {
                                 </div>
 
                                 {/* Drop-off */}
-                                <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-orange-600 dark:bg-white flex items-center justify-center shrink-0 z-10">
-                                        <MapPin size={20} className="text-white dark:text-orange-600" />
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-orange-600 dark:bg-white flex items-center justify-center shrink-0 z-10">
+                                        <MapPin size={16} className="text-white dark:text-orange-600" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-[10px] font-black text-orange-600/60 dark:text-white/50 uppercase tracking-widest mb-0.5">Delivery Point</div>
-                                        <h4 className="text-gray-900 dark:text-white font-black text-base truncate">
+                                        <div className="text-[9px] font-black text-orange-600/60 dark:text-white/50 uppercase tracking-widest mb-0.5">Delivery Point</div>
+                                        <h4 className="text-gray-900 dark:text-white font-black text-sm truncate">
                                             {activeOrder.userName || (activeOrder.userId?.firstname ? `${activeOrder.userId.firstname} ${activeOrder.userId.lastname || ''}` : "Customer")}
                                         </h4>
-                                        <p className="text-gray-500 dark:text-white/70 text-xs font-medium line-clamp-2">
+                                        <p className="text-gray-500 dark:text-white/70 text-[11px] font-medium line-clamp-2">
                                             {activeOrder.deliveryFullAddress ||
                                                 (activeOrder.deliveryAddress?.addressLine
                                                     ? `${activeOrder.deliveryAddress.addressLine}, ${activeOrder.deliveryAddress.city || ''}, ${activeOrder.deliveryAddress.state || ''}`.replace(/,,/g, ',').trim()
@@ -418,12 +418,12 @@ export default function RiderDashboard() {
 
                             {/* Order Summary */}
                             {activeOrder?.items && activeOrder.items.length > 0 && (
-                                <div className="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-5 mb-8 border border-orange-100 dark:border-white/5">
-                                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                                        <Package size={16} className="text-orange-600 dark:text-orange-400" />
+                                <div className="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-3.5 mb-4 border border-orange-100 dark:border-white/5">
+                                    <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                                        <Package size={14} className="text-orange-600 dark:text-orange-400" />
                                         Order Summary
                                     </h3>
-                                    <div className="space-y-4">
+                                    <div className="space-y-2.5">
                                         {activeOrder.items.map((item, idx) => {
                                             const itemName = item.name || item.variant?.name || item.foodName || "Item";
                                             const quantity = Number(item.quantity) || 1;
@@ -440,17 +440,17 @@ export default function RiderDashboard() {
                                             fullSentence += ".";
 
                                             return (
-                                                <div key={idx} className="border-b border-gray-100 dark:border-white/5 last:border-0 pb-3 last:pb-0">
-                                                    <div className="flex gap-3">
-                                                        <div className="p-1.5 h-fit bg-slate-100 dark:bg-slate-800 rounded text-slate-500">
-                                                            <Package size={12} />
+                                                <div key={idx} className="border-b border-gray-100 dark:border-white/5 last:border-0 pb-2 last:pb-0">
+                                                    <div className="flex gap-2">
+                                                        <div className="p-1 h-fit bg-slate-100 dark:bg-slate-800 rounded text-slate-500">
+                                                            <Package size={10} />
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-snug">
+                                                            <p className="text-xs font-bold text-gray-900 dark:text-gray-100 leading-snug">
                                                                 {fullSentence}
                                                             </p>
                                                             {item.note && (
-                                                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 italic font-medium">
+                                                                <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-0.5 italic font-medium">
                                                                     Note: {item.note}
                                                                 </p>
                                                             )}
@@ -460,9 +460,9 @@ export default function RiderDashboard() {
                                             );
                                         })}
                                     </div>
-                                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-white/10 flex justify-between items-center px-1">
-                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Items</span>
-                                        <span className="text-sm font-black text-gray-900 dark:text-white">
+                                    <div className="mt-2.5 pt-2.5 border-t border-gray-100 dark:border-white/10 flex justify-between items-center px-1">
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Items</span>
+                                        <span className="text-xs font-black text-gray-900 dark:text-white">
                                             {activeOrder.items.reduce((acc, item) => acc + (item.quantity || 1), 0)}
                                         </span>
                                     </div>
@@ -471,24 +471,24 @@ export default function RiderDashboard() {
 
                             {/* General Order Note */}
                             {activeOrder?.note && (
-                                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-4 mb-8 border border-orange-100 dark:border-orange-500/20 flex gap-3 items-start">
-                                    <AlertCircle size={18} className="text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+                                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 mb-4 border border-orange-100 dark:border-orange-500/20 flex gap-2.5 items-start">
+                                    <AlertCircle size={16} className="text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
                                     <div>
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 mb-1">Customer Note</h4>
-                                        <p className="text-sm font-medium text-orange-900 dark:text-orange-100">{activeOrder.note}</p>
+                                        <h4 className="text-[9px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 mb-0.5">Customer Note</h4>
+                                        <p className="text-xs font-medium text-orange-900 dark:text-orange-100">{activeOrder.note}</p>
                                     </div>
                                 </div>
                             )}
 
                             {/* Customer & Call Section */}
-                            <div className="bg-white dark:bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-8 flex items-center justify-between border border-orange-100 dark:border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
-                                        <Star size={18} className="text-orange-600 dark:text-orange-300" />
+                            <div className="bg-white dark:bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-4 flex items-center justify-between border border-orange-100 dark:border-white/5">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
+                                        <Star size={14} className="text-orange-600 dark:text-orange-300" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-gray-400 dark:text-white/40 uppercase tracking-widest leading-none mb-1">Customer</p>
-                                        <p className="text-gray-900 dark:text-white font-bold text-sm leading-none">
+                                        <p className="text-[9px] font-black text-gray-400 dark:text-white/40 uppercase tracking-widest leading-none mb-1">Customer</p>
+                                        <p className="text-gray-900 dark:text-white font-bold text-xs leading-none">
                                             {activeOrder.userName || activeOrder.userId?.firstname || "Guest"}
                                         </p>
                                     </div>
@@ -496,22 +496,22 @@ export default function RiderDashboard() {
 
                                 <a
                                     href={`tel:${activeOrder.userPhone || activeOrder.userId?.phone || activeOrder.userOrderId?.phone || ''}`}
-                                    className="h-10 px-4 rounded-xl bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center gap-2 font-black text-xs hover:bg-orange-700 dark:hover:bg-orange-50 transition-colors active:scale-95"
+                                    className="h-8 px-3 rounded-lg bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center gap-1.5 font-black text-[10px] hover:bg-orange-700 dark:hover:bg-orange-50 transition-colors active:scale-95"
                                 >
-                                    <Phone size={14} />
+                                    <Phone size={12} />
                                     CALL
                                 </a>
                             </div>
 
                             {/* 🔐 NEW: Code Sent Notice */}
                             {activeOrder?.deliveryOtp && (
-                                <div className="bg-zinc-900 dark:bg-white rounded-2xl p-4 mb-8 flex items-center gap-4 border border-zinc-800 dark:border-zinc-200 shadow-xl shadow-black/10">
-                                    <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center shrink-0">
-                                        <CheckCircle2 size={20} className="text-white" />
+                                <div className="bg-zinc-900 dark:bg-white rounded-xl p-3 mb-4 flex items-center gap-3 border border-zinc-800 dark:border-zinc-200 shadow-xl shadow-black/10">
+                                    <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 size={16} className="text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest leading-none mb-1">Confirmation Ready</p>
-                                        <p className="text-white dark:text-zinc-900 font-bold text-xs">
+                                        <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none mb-1">Confirmation Ready</p>
+                                        <p className="text-white dark:text-zinc-900 font-bold text-[11px]">
                                             Delivery code has been sent to the customer's portal.
                                         </p>
                                     </div>
@@ -519,20 +519,20 @@ export default function RiderDashboard() {
                             )}
 
                             {/* Actions Zone */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 {isPendingAssignment ? (
                                     <>
                                         <button
                                             onClick={() => handleAction("reject")}
-                                            className="h-16 rounded-2xl bg-gray-100 dark:bg-white/10 hover:bg-red-500/10 dark:hover:bg-red-500/20 text-gray-600 dark:text-white font-black text-sm transition-all border border-gray-200 dark:border-white/10"
+                                            className="h-11 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-red-500/10 dark:hover:bg-red-500/20 text-gray-600 dark:text-white font-black text-xs transition-all border border-gray-200 dark:border-white/10"
                                         >
                                             REJECT
                                         </button>
                                         <button
                                             onClick={() => handleAction("accept")}
-                                            className="h-16 rounded-2xl bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center justify-center font-black text-sm transition-all active:scale-95"
+                                            className="h-11 rounded-xl bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center justify-center font-black text-xs transition-all active:scale-95"
                                         >
-                                            <CheckCircle2 size={20} className="mr-2" />
+                                            <CheckCircle2 size={16} className="mr-1.5" />
                                             ACCEPT
                                         </button>
                                     </>
@@ -563,33 +563,33 @@ export default function RiderDashboard() {
 
                                                 window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetAddr)}`);
                                             }}
-                                            className="h-16 rounded-2xl bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/20 text-gray-900 dark:text-white font-black text-sm flex items-center justify-center transition-all border border-gray-200 dark:border-white/10"
+                                            className="h-11 rounded-xl bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/20 text-gray-900 dark:text-white font-black text-xs flex items-center justify-center transition-all border border-gray-200 dark:border-white/10"
                                         >
-                                            <Navigation size={20} className="mr-2 text-orange-600 dark:text-orange-300" />
+                                            <Navigation size={16} className="mr-1.5 text-orange-600 dark:text-orange-300" />
                                             OPEN MAPS
                                         </button>
                                         {isHeadingToStore ? (
                                             <button
                                                 onClick={() => handleAction("pickup")}
-                                                className="h-16 rounded-2xl bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center justify-center font-black text-sm transition-all active:scale-95"
+                                                className="h-11 rounded-xl bg-orange-600 dark:bg-white text-white dark:text-orange-700 flex items-center justify-center font-black text-xs transition-all active:scale-95"
                                             >
-                                                <Package size={20} className="mr-2" />
+                                                <Package size={16} className="mr-1.5" />
                                                 PICKED UP
                                             </button>
                                         ) : (
                                             <button
                                                 onClick={() => handleAction("deliver")}
                                                 disabled={otpState.sending}
-                                                className="h-16 rounded-2xl bg-orange-600 dark:bg-orange-400 text-white dark:text-orange-900 flex items-center justify-center font-black text-sm transition-all active:scale-95 disabled:opacity-60"
+                                                className="h-11 rounded-xl bg-orange-600 dark:bg-orange-400 text-white dark:text-orange-900 flex items-center justify-center font-black text-xs transition-all active:scale-95 disabled:opacity-60"
                                             >
                                                 {otpState.sending
-                                                    ? <Loader2 size={20} className="animate-spin" />
-                                                    : <><CheckCircle2 size={20} className="mr-2" />DELIVERED</>}
+                                                    ? <Loader2 size={16} className="animate-spin" />
+                                                    : <><CheckCircle2 size={16} className="mr-1.5" />DELIVERED</>}
                                             </button>
                                         )}
                                     </>
                                 ) : (
-                                    <p className="col-span-2 text-center text-gray-400 dark:text-white/60 text-xs font-bold py-4">Order status: {activeOrder.status}</p>
+                                    <p className="col-span-2 text-center text-gray-400 dark:text-white/60 text-[10px] font-bold py-2">Order status: {activeOrder.status}</p>
                                 )}
                             </div>
 
@@ -653,86 +653,100 @@ export default function RiderDashboard() {
                             </AnimatePresence>
                         </div>
                     </motion.div>
-                ) : (
-                    <motion.div
-                        key="idle"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-6"
-                    >
-                        {isOnline && pendingOffers.length > 0 ? (
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                                    <Package size={20} className="text-orange-600" />
-                                    Available Deliveries ({pendingOffers.length})
-                                </h3>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {pendingOffers.map((offer) => (
-                                        <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-5 shadow-sm hover:border-orange-500/30 transition-all">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-100 dark:bg-green-500/20 rounded-full mb-3">
-                                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                                        <span className="text-[10px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">New Offer</span>
-                                                    </div>
-                                                    <h4 className="text-lg font-black text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-xs">
-                                                        {offer.restaurantName}
-                                                    </h4>
-                                                    <p className="text-xs text-gray-500 dark:text-white/60 font-medium truncate mt-0.5">
-                                                        To: {offer.deliveryFullAddress}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="text-xl font-black text-gray-900 dark:text-white">
-                                                        ₦{Number(offer.deliveryFee || 600).toLocaleString()}
-                                                    </div>
-                                                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Payout</div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center justify-between gap-4 mt-6">
-                                                <button
-                                                    onClick={async () => {
-                                                        const id = toast.loading("Accepting...");
-                                                        try {
-                                                            await acceptOffer(riderId, offer._id);
-                                                            toast.success("Delivery Accepted! 🛵", { id });
-                                                            await Promise.allSettled([fetchDashboardData(), refreshProfile()]);
-                                                        } catch (e) {
-                                                            toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
-                                                        }
-                                                    }}
-                                                    className="flex-1 h-12 bg-orange-600 text-white rounded-xl font-black text-sm flex items-center justify-center transition-all active:scale-95"
-                                                >
-                                                    ACCEPT JOB
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className={`p-10 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${isOnline
-                                ? "bg-orange-50 dark:bg-orange-600/5 border-orange-200 dark:border-orange-500/20"
-                                : "bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20 opacity-60"
-                                }`}>
-                                <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${isOnline ? "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500" : "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500"
-                                    }`}>
-                                    <Bike size={40} className={isOnline ? "animate-bounce" : ""} />
-                                </div>
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
-                                    {isOnline ? "Waiting for Orders..." : "You are Offline"}
-                                </h3>
-                                <p className="text-gray-500 text-sm font-medium max-w-[220px]">
-                                    {isOnline
-                                        ? "Stay active in the area for faster assignments."
-                                        : "Hit the power button in the header to start receiving jobs."}
-                                </p>
-                            </div>
-                        )}
-                    </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Available Deliveries or Idle State */}
+            {(!activeOrder || (isOnline && pendingOffers.length > 0)) && (
+                <motion.div
+                    key="idle"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6 mt-6"
+                >
+                    {isOnline && pendingOffers.length > 0 ? (
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                <Package size={20} className="text-orange-600" />
+                                Available Deliveries ({pendingOffers.length})
+                            </h3>
+                            <div className="grid grid-cols-1 gap-4">
+                                {pendingOffers.map((offer) => (
+                                    <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="min-w-0 flex-1 pr-3">
+                                                <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-500/20 rounded-full mb-2">
+                                                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                                    <span className="text-[9px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">New Offer</span>
+                                                </div>
+                                                <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
+                                                    {offer.restaurantName}
+                                                </h4>
+                                                <div className="space-y-1.5 mt-2">
+                                                    <div className="p-2 rounded-xl bg-orange-50/50 dark:bg-white/5 border border-orange-100/50 dark:border-white/5 flex items-start gap-1.5">
+                                                        <Package size={14} className="text-orange-600 shrink-0 mt-0.5" />
+                                                        <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
+                                                            Pickup: {offer.restaurantAddress || offer.restaurantId?.fullAddress || "Restaurant Location"}
+                                                        </p>
+                                                    </div>
+                                                    <div className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-start gap-1.5">
+                                                        <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
+                                                        <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
+                                                            Deliver: {offer.deliveryFullAddress || "Customer Address"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <div className="text-base font-black text-gray-900 dark:text-white">
+                                                    ₦{Number(offer.deliveryFee || 600).toLocaleString()}
+                                                </div>
+                                                <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4 mt-3">
+                                            <button
+                                                onClick={async () => {
+                                                    const id = toast.loading("Accepting...");
+                                                    try {
+                                                        await acceptOffer(riderId, offer._id);
+                                                        toast.success("Delivery Accepted! 🛵", { id });
+                                                        await Promise.allSettled([fetchDashboardData(), refreshProfile()]);
+                                                    } catch (e) {
+                                                        toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
+                                                    }
+                                                }}
+                                                className="flex-1 h-9 bg-orange-600 text-white rounded-xl font-black text-xs flex items-center justify-center transition-all active:scale-95"
+                                            >
+                                                ACCEPT JOB
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : !activeOrder ? (
+                        <div className={`p-10 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${isOnline
+                            ? "bg-orange-50 dark:bg-orange-600/5 border-orange-200 dark:border-orange-500/20"
+                            : "bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20 opacity-60"
+                            }`}>
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${isOnline ? "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500" : "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500"
+                                }`}>
+                                <Bike size={40} className={isOnline ? "animate-bounce" : ""} />
+                            </div>
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+                                {isOnline ? "Waiting for Orders..." : "You are Offline"}
+                            </h3>
+                            <p className="text-gray-500 text-sm font-medium max-w-[220px]">
+                                {isOnline
+                                    ? "Stay active in the area for faster assignments."
+                                    : "Hit the power button in the header to start receiving jobs."}
+                            </p>
+                        </div>
+                    ) : null}
+                </motion.div>
+            )}
 
             {/* Offline reminder */}
             {!isOnline && (
