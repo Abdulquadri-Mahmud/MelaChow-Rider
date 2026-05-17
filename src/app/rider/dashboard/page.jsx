@@ -666,12 +666,22 @@ export default function RiderDashboard() {
                 >
                     {isOnline && pendingOffers.length > 0 ? (
                         <div className="space-y-4">
-                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                                <Package size={20} className="text-orange-600" />
-                                Available Deliveries ({pendingOffers.length})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                    <Package size={20} className="text-orange-600" />
+                                    Available Deliveries ({pendingOffers.length})
+                                </h3>
+                                {pendingOffers.length > 5 && (
+                                    <Link 
+                                        href="/rider/deliveries" 
+                                        className="text-xs font-black text-orange-600 dark:text-orange-500 hover:underline uppercase tracking-wider bg-orange-50 dark:bg-orange-500/10 px-3 py-1 rounded-full flex items-center gap-1 active:scale-95 transition-all"
+                                    >
+                                        SEE ALL
+                                    </Link>
+                                )}
+                            </div>
                             <div className="grid grid-cols-1 gap-4">
-                                {pendingOffers.map((offer) => (
+                                {pendingOffers.slice(0, 5).map((offer) => (
                                     <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="min-w-0 flex-1 pr-3">
