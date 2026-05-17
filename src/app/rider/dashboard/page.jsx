@@ -80,7 +80,7 @@ export default function RiderDashboard() {
                 const order = data?.data?.order || data?.order || (data?._id ? data : null);
                 
                 let offers = [];
-                if (!order && isOnline) {
+                if (isOnline) {
                     const offersData = await getPendingOffers(riderId);
                     offers = offersData?.data?.offers || offersData?.offers || [];
                 }
@@ -338,7 +338,7 @@ export default function RiderDashboard() {
 
             {/* Active Order */}
             <AnimatePresence mode="wait">
-                {activeOrder ? (
+                {activeOrder && (
                     <motion.div
                         key="active"
                         initial={{ opacity: 0, y: 20 }}
@@ -653,89 +653,100 @@ export default function RiderDashboard() {
                             </AnimatePresence>
                         </div>
                     </motion.div>
-                ) : (
-                    <motion.div
-                        key="idle"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-6"
-                    >
-                        {isOnline && pendingOffers.length > 0 ? (
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                                    <Package size={20} className="text-orange-600" />
-                                    Available Deliveries ({pendingOffers.length})
-                                </h3>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {pendingOffers.map((offer) => (
-                                        <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div className="min-w-0 flex-1 pr-3">
-                                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-500/20 rounded-full mb-2">
-                                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                                        <span className="text-[9px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">New Offer</span>
+                )}
+            </AnimatePresence>
+
+            {/* Available Deliveries or Idle State */}
+            {(!activeOrder || (isOnline && pendingOffers.length > 0)) && (
+                <motion.div
+                    key="idle"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6 mt-6"
+                >
+                    {isOnline && pendingOffers.length > 0 ? (
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                <Package size={20} className="text-orange-600" />
+                                Available Deliveries ({pendingOffers.length})
+                            </h3>
+                            <div className="grid grid-cols-1 gap-4">
+                                {pendingOffers.map((offer) => (
+                                    <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="min-w-0 flex-1 pr-3">
+                                                <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-500/20 rounded-full mb-2">
+                                                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                                    <span className="text-[9px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">New Offer</span>
+                                                </div>
+                                                <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
+                                                    {offer.restaurantName}
+                                                </h4>
+                                                <div className="space-y-1.5 mt-2">
+                                                    <div className="p-2 rounded-xl bg-orange-50/50 dark:bg-white/5 border border-orange-100/50 dark:border-white/5 flex items-start gap-1.5">
+                                                        <Package size={14} className="text-orange-600 shrink-0 mt-0.5" />
+                                                        <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
+                                                            Pickup: {offer.restaurantAddress || offer.restaurantId?.fullAddress || "Restaurant Location"}
+                                                        </p>
                                                     </div>
-                                                    <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
-                                                        {offer.restaurantName}
-                                                    </h4>
-                                                    <div className="mt-2 p-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-start gap-1.5">
+                                                    <div className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-start gap-1.5">
                                                         <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
-                                                        <p className="text-xs text-gray-700 dark:text-white/80 font-black leading-snug break-words">
-                                                            To: {offer.deliveryFullAddress || "Customer Address"}
+                                                        <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
+                                                            Deliver: {offer.deliveryFullAddress || "Customer Address"}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right shrink-0">
-                                                    <div className="text-base font-black text-gray-900 dark:text-white">
-                                                        ₦{Number(offer.deliveryFee || 600).toLocaleString()}
-                                                    </div>
-                                                    <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
-                                                </div>
                                             </div>
-
-                                            <div className="flex items-center justify-between gap-4 mt-3">
-                                                <button
-                                                    onClick={async () => {
-                                                        const id = toast.loading("Accepting...");
-                                                        try {
-                                                            await acceptOffer(riderId, offer._id);
-                                                            toast.success("Delivery Accepted! 🛵", { id });
-                                                            await Promise.allSettled([fetchDashboardData(), refreshProfile()]);
-                                                        } catch (e) {
-                                                            toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
-                                                        }
-                                                    }}
-                                                    className="flex-1 h-9 bg-orange-600 text-white rounded-xl font-black text-xs flex items-center justify-center transition-all active:scale-95"
-                                                >
-                                                    ACCEPT JOB
-                                                </button>
+                                            <div className="text-right shrink-0">
+                                                <div className="text-base font-black text-gray-900 dark:text-white">
+                                                    ₦{Number(offer.deliveryFee || 600).toLocaleString()}
+                                                </div>
+                                                <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+
+                                        <div className="flex items-center justify-between gap-4 mt-3">
+                                            <button
+                                                onClick={async () => {
+                                                    const id = toast.loading("Accepting...");
+                                                    try {
+                                                        await acceptOffer(riderId, offer._id);
+                                                        toast.success("Delivery Accepted! 🛵", { id });
+                                                        await Promise.allSettled([fetchDashboardData(), refreshProfile()]);
+                                                    } catch (e) {
+                                                        toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
+                                                    }
+                                                }}
+                                                className="flex-1 h-9 bg-orange-600 text-white rounded-xl font-black text-xs flex items-center justify-center transition-all active:scale-95"
+                                            >
+                                                ACCEPT JOB
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ) : (
-                            <div className={`p-10 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${isOnline
-                                ? "bg-orange-50 dark:bg-orange-600/5 border-orange-200 dark:border-orange-500/20"
-                                : "bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20 opacity-60"
+                        </div>
+                    ) : !activeOrder ? (
+                        <div className={`p-10 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${isOnline
+                            ? "bg-orange-50 dark:bg-orange-600/5 border-orange-200 dark:border-orange-500/20"
+                            : "bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20 opacity-60"
+                            }`}>
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${isOnline ? "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500" : "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500"
                                 }`}>
-                                <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${isOnline ? "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500" : "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500"
-                                    }`}>
-                                    <Bike size={40} className={isOnline ? "animate-bounce" : ""} />
-                                </div>
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
-                                    {isOnline ? "Waiting for Orders..." : "You are Offline"}
-                                </h3>
-                                <p className="text-gray-500 text-sm font-medium max-w-[220px]">
-                                    {isOnline
-                                        ? "Stay active in the area for faster assignments."
-                                        : "Hit the power button in the header to start receiving jobs."}
-                                </p>
+                                <Bike size={40} className={isOnline ? "animate-bounce" : ""} />
                             </div>
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+                                {isOnline ? "Waiting for Orders..." : "You are Offline"}
+                            </h3>
+                            <p className="text-gray-500 text-sm font-medium max-w-[220px]">
+                                {isOnline
+                                    ? "Stay active in the area for faster assignments."
+                                    : "Hit the power button in the header to start receiving jobs."}
+                            </p>
+                        </div>
+                    ) : null}
+                </motion.div>
+            )}
 
             {/* Offline reminder */}
             {!isOnline && (
