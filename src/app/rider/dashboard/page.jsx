@@ -355,7 +355,6 @@ export default function RiderDashboard() {
                         onClick={() => router.push("/rider/ongoing-delivery")}
                         className="relative overflow-hidden group cursor-pointer bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-2xl p-4 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all border border-orange-400"
                     >
-                        <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
                         <div className="flex items-center gap-3.5">
                             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
                                 <Bike size={20} className="text-white animate-bounce" />
