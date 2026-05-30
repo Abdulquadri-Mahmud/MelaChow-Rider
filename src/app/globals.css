@@ -245,6 +245,26 @@ html::-webkit-scrollbar {
   .text-shadow-premium {
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
+
+  .composite-stable {
+    isolation: isolate;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: paint;
+  }
+
+  .mobile-solid-surface {
+    isolation: isolate;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-solid-surface {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
 }
 
 @keyframes fadeInUp {

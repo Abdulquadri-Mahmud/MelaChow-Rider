@@ -274,7 +274,7 @@ export default function RiderDashboard() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 composite-stable">
 
             {/* Greeting */}
             <div className="flex justify-between items-start">
@@ -402,7 +402,7 @@ export default function RiderDashboard() {
                             </div>
                             <div className="grid grid-cols-1 gap-4">
                                 {pendingOffers.slice(0, 5).map((offer) => (
-                                    <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
+                                    <div key={offer._id} className="composite-stable bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="min-w-0 flex-1 pr-3">
                                                 <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-500/20 rounded-full mb-2">
