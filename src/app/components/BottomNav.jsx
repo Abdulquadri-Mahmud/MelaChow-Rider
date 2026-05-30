@@ -48,7 +48,7 @@ export default function BottomBar() {
       <motion.nav
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative bg-white dark:bg-zinc-900/80 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-t-[32px] px-2 py-3"
+        className="relative bg-white dark:bg-zinc-900 border border-gray-200/50 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-t-[32px] px-2 py-3"
       >
         <div className="flex justify-between items-center relative">
           {navItems.map((item) => {

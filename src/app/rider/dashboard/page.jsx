@@ -274,7 +274,7 @@ export default function RiderDashboard() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 composite-stable">
 
             {/* Greeting */}
             <div className="flex justify-between items-start">
@@ -355,7 +355,6 @@ export default function RiderDashboard() {
                         onClick={() => router.push("/rider/ongoing-delivery")}
                         className="relative overflow-hidden group cursor-pointer bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-2xl p-4 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all border border-orange-400"
                     >
-                        <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
                         <div className="flex items-center gap-3.5">
                             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
                                 <Bike size={20} className="text-white animate-bounce" />
@@ -403,7 +402,7 @@ export default function RiderDashboard() {
                             </div>
                             <div className="grid grid-cols-1 gap-4">
                                 {pendingOffers.slice(0, 5).map((offer) => (
-                                    <div key={offer._id} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
+                                    <div key={offer._id} className="composite-stable bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="min-w-0 flex-1 pr-3">
                                                 <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-500/20 rounded-full mb-2">

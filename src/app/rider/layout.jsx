@@ -32,7 +32,7 @@ function RiderHeader({ isOnline, toggleAvailability, isToggling }) {
     }, []);
 
     return (
-        <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-white/5 py-3' : 'bg-transparent py-5'
+        <header className={`fixed top-0 left-0 right-0 z-50 mobile-solid-surface transition-all duration-300 ${scrolled ? 'bg-white dark:bg-[#0F1115] border-b border-gray-200 dark:border-white/5 py-3' : 'bg-white dark:bg-[#0F1115] py-5'
             }`}>
             <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -120,15 +120,15 @@ function RiderLayoutInner({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0F1115] text-gray-900 dark:text-white transition-colors duration-300">
+        <div className="min-h-screen bg-white dark:bg-[#0F1115] text-gray-900 dark:text-white transition-colors duration-300 composite-stable">
             <RiderHeader isOnline={isOnline} toggleAvailability={toggleAvailability} isToggling={isToggling} />
             <main className="pt-24 pb-20 px-4 max-w-7xl mx-auto">
                 {children}
             </main>
 
             {/* Bottom Navigation for Mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden">
-                <nav className="bg-white/80 dark:bg-black/80 backdrop-blur-2xl border border-gray-200 dark:border-white/10 py-3 px-4 rounded-t-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center justify-between relative overflow-hidden">
+            <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden mobile-solid-surface">
+                <nav className="composite-stable bg-white dark:bg-[#0F1115] border border-gray-200 dark:border-white/10 py-3 px-4 rounded-t-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center justify-between relative overflow-hidden">
 
                     <Link href="/rider/dashboard" className="relative flex flex-col items-center gap-1 group py-1 min-w-[44px]">
                         <motion.div
