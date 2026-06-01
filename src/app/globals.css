@@ -248,14 +248,11 @@ html::-webkit-scrollbar {
 
   .composite-stable {
     isolation: isolate;
-    transform: translateZ(0);
     backface-visibility: hidden;
-    contain: paint;
   }
 
   .mobile-solid-surface {
     isolation: isolate;
-    transform: translateZ(0);
     backface-visibility: hidden;
   }
 
