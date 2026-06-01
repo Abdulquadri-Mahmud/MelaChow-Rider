@@ -122,13 +122,13 @@ function RiderLayoutInner({ children }) {
     return (
         <div className="min-h-screen bg-white dark:bg-[#0F1115] text-gray-900 dark:text-white transition-colors duration-300 composite-stable">
             <RiderHeader isOnline={isOnline} toggleAvailability={toggleAvailability} isToggling={isToggling} />
-            <main className="pt-24 pb-20 px-4 max-w-7xl mx-auto">
+            <main className="pt-24 pb-28 px-4 max-w-7xl mx-auto">
                 {children}
             </main>
 
             {/* Bottom Navigation for Mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden mobile-solid-surface">
-                <nav className="composite-stable bg-white dark:bg-[#0F1115] border border-gray-200 dark:border-white/10 py-3 px-4 rounded-t-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center justify-between relative overflow-hidden">
+            <div className="fixed inset-x-0 bottom-0 z-[1000] sm:hidden pointer-events-none">
+                <nav className="pointer-events-auto bg-white dark:bg-[#0F1115] border-t border-gray-200 dark:border-white/10 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] px-4 shadow-[0_-12px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_-12px_32px_rgba(0,0,0,0.35)] flex items-center justify-between relative">
 
                     <Link href="/rider/dashboard" className="relative flex flex-col items-center gap-1 group py-1 min-w-[44px]">
                         <motion.div
