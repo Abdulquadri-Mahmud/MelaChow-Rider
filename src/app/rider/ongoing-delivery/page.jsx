@@ -161,7 +161,7 @@ export default function OngoingDeliveryPage() {
                 </p>
                 <button
                     onClick={() => router.replace("/rider/dashboard")}
-                    className="h-10 px-6 bg-orange-600 text-white rounded-xl font-black text-xs transition-all active:scale-95 shadow-md shadow-orange-600/10 hover:bg-orange-700"
+                    className="h-10 px-6 bg-orange-600 text-white rounded font-black text-xs transition-all active:scale-95 shadow-md shadow-orange-600/10 hover:bg-orange-700"
                 >
                     RETURN TO DASHBOARD
                 </button>
@@ -174,7 +174,7 @@ export default function OngoingDeliveryPage() {
     const activeOrderTitle = isHeadingToStore ? "Head to Store" : "Out for Delivery";
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-24 text-zinc-900 dark:text-zinc-100">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-14 text-zinc-900 dark:text-zinc-100">
             {/* Header */}
             <div className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-zinc-900/80 border-b border-zinc-100 dark:border-zinc-800/50 px-4 py-4 flex items-center gap-3">
                 <button
@@ -204,7 +204,7 @@ export default function OngoingDeliveryPage() {
                                 {activeOrderTitle}
                             </h2>
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-orange-600 text-white flex items-center justify-center">
+                        <div className="w-12 h-12 rounded bg-orange-600 text-white flex items-center justify-center">
                             <Bike size={24} className="animate-pulse" />
                         </div>
                     </div>
@@ -215,7 +215,7 @@ export default function OngoingDeliveryPage() {
 
                         {/* Pickup address */}
                         <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 z-10 border border-zinc-200 dark:border-zinc-700">
+                            <div className="w-8 h-8 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 z-10 border border-zinc-200 dark:border-zinc-700">
                                 <Package size={16} className="text-orange-600" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -231,7 +231,7 @@ export default function OngoingDeliveryPage() {
 
                         {/* Customer Drop-off */}
                         <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-orange-600 text-white flex items-center justify-center shrink-0 z-10">
+                            <div className="w-8 h-8 rounded bg-orange-600 text-white flex items-center justify-center shrink-0 z-10">
                                 <MapPin size={16} />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -248,7 +248,7 @@ export default function OngoingDeliveryPage() {
 
                     {/* Order Summary */}
                     {activeOrder.items && activeOrder.items.length > 0 && (
-                        <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl p-4 mb-6 border border-zinc-100 dark:border-zinc-800">
+                        <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded p-4 mb-6 border border-zinc-100 dark:border-zinc-800">
                             <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-zinc-100 dark:border-zinc-800 pb-2">
                                 <Package size={14} className="text-orange-600" />
                                 Order Details
@@ -292,7 +292,7 @@ export default function OngoingDeliveryPage() {
                     )}
 
                     {/* Customer Call bar */}
-                    <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl p-3 mb-6 flex items-center justify-between border border-zinc-100 dark:border-zinc-800">
+                    <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded p-3 mb-6 flex items-center justify-between border border-zinc-100 dark:border-zinc-800">
                         <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
                                 <Phone size={14} className="text-orange-600" />
@@ -307,7 +307,7 @@ export default function OngoingDeliveryPage() {
 
                         <a
                             href={`tel:${activeOrder.userPhone || ""}`}
-                            className="h-8 px-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1.5 font-black text-[10px] transition-all active:scale-95"
+                            className="h-8 px-3 rounded bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1.5 font-black text-[10px] transition-all active:scale-95"
                         >
                             <Phone size={12} />
                             CALL
@@ -316,8 +316,8 @@ export default function OngoingDeliveryPage() {
 
                     {/* Live delivery code status notice */}
                     {activeOrder.deliveryOtp && (
-                        <div className="bg-zinc-900 dark:bg-zinc-800 rounded-2xl p-3 mb-6 flex items-center gap-3 shadow-md">
-                            <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center shrink-0">
+                        <div className="bg-zinc-900 dark:bg-zinc-800 rounded p-3 mb-6 flex items-center gap-3 shadow-md">
+                            <div className="w-8 h-8 rounded bg-orange-600 flex items-center justify-center shrink-0">
                                 <CheckCircle2 size={16} className="text-white" />
                             </div>
                             <div>
@@ -347,7 +347,7 @@ export default function OngoingDeliveryPage() {
 
                                 window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetAddr)}`);
                             }}
-                            className="h-12 rounded-xl bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-black text-xs flex items-center justify-center transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95"
+                            className="h-12 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-black text-xs flex items-center justify-center transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95"
                         >
                             <Navigation size={16} className="mr-1.5 text-orange-600" />
                             OPEN MAPS
@@ -357,7 +357,7 @@ export default function OngoingDeliveryPage() {
                             <button
                                 onClick={() => handleAction("pickup")}
                                 disabled={isPickingUp}
-                                className="h-12 rounded-xl bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center font-black text-xs transition-all active:scale-95 disabled:opacity-60"
+                                className="h-12 rounded bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center font-black text-xs transition-all active:scale-95 disabled:opacity-60"
                             >
                                 {isPickingUp ? (
                                     <Loader2 size={16} className="animate-spin" />
@@ -372,7 +372,7 @@ export default function OngoingDeliveryPage() {
                             <button
                                 onClick={() => handleAction("deliver")}
                                 disabled={otpState.sending}
-                                className="h-12 rounded-xl bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center font-black text-xs transition-all active:scale-95 disabled:opacity-60"
+                                className="h-12 rounded bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center font-black text-xs transition-all active:scale-95 disabled:opacity-60"
                             >
                                 {otpState.sending ? (
                                     <Loader2 size={16} className="animate-spin" />
@@ -428,12 +428,12 @@ export default function OngoingDeliveryPage() {
                                             setOtpState(prev => ({ ...prev, otp: e.target.value }));
                                         }}
                                         placeholder="0 0 0 0 0 0"
-                                        className="w-full h-16 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-4 text-3xl font-black text-center tracking-[0.5em] text-zinc-900 dark:text-white outline-none focus:border-orange-500 caret-orange-500"
+                                        className="w-full h-16 rounded bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-4 text-3xl font-black text-center tracking-[0.5em] text-zinc-900 dark:text-white outline-none focus:border-orange-500 caret-orange-500"
                                     />
                                     <button
                                         onClick={handleConfirmOTP}
                                         disabled={otpState.otp.trim().length !== 6 || otpState.confirming}
-                                        className="w-full h-14 rounded-2xl bg-orange-600 text-white font-black text-sm disabled:opacity-50 active:scale-95 transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2"
+                                        className="w-full h-14 rounded bg-orange-600 text-white font-black text-sm disabled:opacity-50 active:scale-95 transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2"
                                     >
                                         {otpState.confirming ? <Loader2 size={18} className="animate-spin" /> : <><CheckCircle2 size={18} /> CONFIRM DELIVERY</>}
                                     </button>

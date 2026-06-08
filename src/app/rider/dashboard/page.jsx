@@ -254,16 +254,16 @@ export default function RiderDashboard() {
                 {/* Greeting Skeleton */}
                 <div className="flex justify-between items-start">
                     <div>
-                        <div className="h-9 w-48 bg-gray-200 dark:bg-white/10 rounded-xl"></div>
-                        <div className="h-4 w-64 bg-gray-200 dark:bg-white/5 rounded-lg mt-3"></div>
+                        <div className="h-9 w-48 bg-gray-200 dark:bg-white/10 rounded-[8px]"></div>
+                        <div className="h-4 w-64 bg-gray-200 dark:bg-white/5 rounded-[8px] mt-3"></div>
                     </div>
-                    <div className="w-10 h-10 bg-gray-200 dark:bg-white/10 rounded-xl"></div>
+                    <div className="w-10 h-10 bg-gray-200 dark:bg-white/10 rounded-[8px]"></div>
                 </div>
 
                 {/* Compact Stats Skeleton */}
                 <div className="grid grid-cols-3 gap-2">
                     {[1, 2, 3].map(idx => (
-                        <div key={idx} className="bg-gray-200 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-xl h-[76px]"></div>
+                        <div key={idx} className="bg-gray-200 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[8px] h-[76px]"></div>
                     ))}
                 </div>
 
@@ -289,7 +289,7 @@ export default function RiderDashboard() {
                 <button
                     onClick={handleRefresh}
                     disabled={isRefreshing}
-                    className={`p-2 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-all ${isRefreshing ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+                    className={`p-2 rounded-[8px] bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-all ${isRefreshing ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
                 >
                     <RefreshCcw size={20} className={isRefreshing ? 'animate-spin' : ''} />
                 </button>
@@ -299,7 +299,7 @@ export default function RiderDashboard() {
             <div className="grid grid-cols-3 gap-2">
                 <Link
                     href="/rider/wallet"
-                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
+                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-[8px] p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
                 >
                     <div className="flex items-center gap-1.5 mb-1.5">
                         <Wallet size={13} className="text-orange-500 shrink-0" />
@@ -313,7 +313,7 @@ export default function RiderDashboard() {
 
                 <Link
                     href="/rider/stats"
-                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
+                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-[8px] p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
                 >
                     <div className="flex items-center gap-1.5 mb-1.5">
                         <Star size={13} className="text-yellow-600 dark:text-yellow-500 shrink-0" />
@@ -329,7 +329,7 @@ export default function RiderDashboard() {
 
                 <Link
                     href="/rider/stats"
-                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
+                    className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-[8px] p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
                 >
                     <div className="flex items-center gap-1.5 mb-1.5">
                         <Activity size={13} className="text-blue-600 dark:text-blue-500 shrink-0" />
@@ -353,10 +353,10 @@ export default function RiderDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         onClick={() => router.push("/rider/ongoing-delivery")}
-                        className="relative overflow-hidden group cursor-pointer bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-2xl p-4 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all border border-orange-400"
+                        className="relative overflow-hidden group cursor-pointer bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-[8px] p-4 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all border border-orange-400"
                     >
                         <div className="flex items-center gap-3.5">
-                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
+                            <div className="w-10 h-10 rounded-[8px] bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
                                 <Bike size={20} className="text-white animate-bounce" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -413,13 +413,13 @@ export default function RiderDashboard() {
                                                     {offer.restaurantName}
                                                 </h4>
                                                 <div className="space-y-1.5 mt-2">
-                                                    <div className="p-2 rounded-xl bg-orange-50/50 dark:bg-white/5 border border-orange-100/50 dark:border-white/5 flex items-start gap-1.5">
+                                                    <div className="p-2 rounded-[8px] bg-orange-50/50 dark:bg-white/5 border border-orange-100/50 dark:border-white/5 flex items-start gap-1.5">
                                                         <Package size={14} className="text-orange-600 shrink-0 mt-0.5" />
                                                         <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
                                                             Pickup: {offer.restaurantAddress || offer.restaurantId?.fullAddress || "Restaurant Location"}
                                                         </p>
                                                     </div>
-                                                    <div className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-start gap-1.5">
+                                                    <div className="p-2 rounded-[8px] bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-start gap-1.5">
                                                         <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
                                                         <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
                                                             Deliver: {offer.deliveryFullAddress || "Customer Address"}
@@ -447,7 +447,7 @@ export default function RiderDashboard() {
                                                         toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
                                                     }
                                                 }}
-                                                className="flex-1 h-9 bg-orange-600 text-white rounded-xl font-black text-xs flex items-center justify-center transition-all active:scale-95"
+                                                className="flex-1 h-9 bg-orange-600 text-white rounded-[8px] font-black text-xs flex items-center justify-center transition-all active:scale-95"
                                             >
                                                 ACCEPT JOB
                                             </button>

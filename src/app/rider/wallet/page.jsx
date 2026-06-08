@@ -118,7 +118,7 @@ function PayoutSettingsModal({ riderId, onClose, onSaved, existingDetails }) {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-sm bg-white dark:bg-[#111318] rounded-2xl p-6 shadow-2xl border border-white/5"
+                className="relative w-full max-w-sm bg-white dark:bg-[#111318] rounded p-4 shadow-2xl border border-white/5"
             >
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Bank Details</h3>
@@ -133,7 +133,7 @@ function PayoutSettingsModal({ riderId, onClose, onSaved, existingDetails }) {
                             maxLength={10}
                             value={accountNumber}
                             onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-                            className="w-full h-12 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-4 text-base font-black tracking-widest"
+                            className="w-full h-12 rounded bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-4 text-base font-black tracking-widest"
                             placeholder="0123456789"
                         />
                     </div>
@@ -143,7 +143,7 @@ function PayoutSettingsModal({ riderId, onClose, onSaved, existingDetails }) {
                         <select
                             value={selectedBank}
                             onChange={e => setSelectedBank(e.target.value)}
-                            className="w-full h-12 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-4 text-xs font-black uppercase tracking-widest"
+                            className="w-full h-12 rounded bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-4 text-xs font-black uppercase tracking-widest"
                         >
                             <option value="">Choose Bank</option>
                             {banks.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
@@ -152,7 +152,7 @@ function PayoutSettingsModal({ riderId, onClose, onSaved, existingDetails }) {
 
                     <AnimatePresence>
                         {(resolving || resolvedName) && (
-                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-green-500/10 border border-green-500/20 rounded">
                                 <p className="text-[10px] font-black text-green-500 uppercase tracking-widest leading-none mb-1">
                                     {resolving ? "Verifying..." : "Account Name"}
                                 </p>
@@ -164,7 +164,7 @@ function PayoutSettingsModal({ riderId, onClose, onSaved, existingDetails }) {
                     <button
                         onClick={handleSave}
                         disabled={!resolvedName || saving}
-                        className="w-full h-12 rounded-xl bg-orange-600 text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2"
+                        className="w-full h-12 rounded bg-orange-600 text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2"
                     >
                         {saving ? <Loader2 className="animate-spin" size={16} /> : "Save Settings"}
                     </button>
@@ -180,7 +180,7 @@ function PayoutScheduleInfo({ balance, bankAccount }) {
     const scheduledDay = isAfter8PM ? "Tomorrow" : "Today";
 
     return (
-        <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 space-y-3">
+        <div className="bg-blue-500/5 border border-blue-500/10 rounded p-4 space-y-3">
             <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                 <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Automatic Payout Scheduled</h4>
@@ -321,7 +321,7 @@ export default function RiderWalletPage() {
 
                 {/* Balance Card */}
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                    <div className="bg-gradient-to-br from-orange-600 to-red-700 rounded-2xl p-5 overflow-hidden shadow-lg shadow-orange-600/20 relative">
+                    <div className="bg-gradient-to-br from-orange-600 to-red-700 rounded p-5 overflow-hidden shadow-lg shadow-orange-600/20 relative">
                         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-2xl pointer-events-none" />
                         <div className="relative z-10">
                             <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white/90 mb-3">
@@ -335,11 +335,11 @@ export default function RiderWalletPage() {
                                 </span>
                             </div>
                             <div className="mt-4 grid grid-cols-2 gap-3">
-                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
+                                <div className="bg-white/10 backdrop-blur-md rounded p-3 border border-white/10">
                                     <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Lifetime</p>
                                     <p className="text-base font-black text-white">₦{Number(rider?.totalEarnings || 0).toLocaleString()}</p>
                                 </div>
-                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
+                                <div className="bg-white/10 backdrop-blur-md rounded p-3 border border-white/10">
                                     <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Deliveries</p>
                                     <p className="text-base font-black text-white">{rider?.totalDeliveries || 0}</p>
                                 </div>
@@ -355,7 +355,7 @@ export default function RiderWalletPage() {
 
                 <button
                     onClick={() => setShowPayoutSettings(true)}
-                    className="w-full bg-gray-900 dark:bg-white text-white dark:text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all text-sm"
+                    className="w-full bg-gray-900 dark:bg-white text-white dark:text-black font-black py-3 rounded flex items-center justify-center gap-2 active:scale-95 transition-all text-sm"
                 >
                     <Building2 size={17} />
                     {bankAccount ? "Bank Settings" : "Link Bank Account"}
@@ -379,7 +379,7 @@ export default function RiderWalletPage() {
                                         key={tx._id || idx}
                                         initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.04 }}
-                                        className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-xl p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group"
+                                        className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group"
                                     >
                                         <div className="flex items-center gap-2.5">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${tx.type === "credit"
@@ -412,9 +412,9 @@ export default function RiderWalletPage() {
                             ) : (
                                 <motion.div
                                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                    className="bg-white dark:bg-[#1A1D23] border border-dashed border-gray-200 dark:border-white/5 rounded-xl p-8 flex flex-col items-center justify-center text-center"
+                                    className="bg-white dark:bg-[#1A1D23] border border-dashed border-gray-200 dark:border-white/5 rounded p-8 flex flex-col items-center justify-center text-center"
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center mb-3 text-gray-400 dark:text-gray-600">
+                                    <div className="w-12 h-12 rounded bg-black/5 dark:bg-white/5 flex items-center justify-center mb-3 text-gray-400 dark:text-gray-600">
                                         <Clock size={24} />
                                     </div>
                                     <h3 className="text-gray-900 dark:text-white font-black text-sm mb-1">No Transactions Yet</h3>
@@ -428,7 +428,7 @@ export default function RiderWalletPage() {
                 </div>
 
                 {/* Policy */}
-                <div className="bg-orange-500/5 border border-orange-500/10 rounded-xl p-4 flex flex-col gap-2">
+                <div className="bg-orange-500/5 border border-orange-500/10 rounded p-4 flex flex-col gap-2">
                     <div className="flex items-center gap-1.5 text-orange-500">
                         <AlertCircle size={14} />
                         <h4 className="font-black text-xs uppercase tracking-widest">Wallet Policy</h4>
