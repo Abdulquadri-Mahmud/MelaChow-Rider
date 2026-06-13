@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Wallet,
@@ -16,168 +16,27 @@ import {
     Building2,
     Send,
     CheckCircle2,
-    X,
-    ChevronDown,
-    History,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRider } from "@/app/context/RiderContext";
 import {
     getRiderWallet,
     getRiderBankAccount,
-    saveRiderBankAccount,
-    resolveRiderAccountName,
     getRiderWithdrawalHistory,
-    getBankList,
 } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 
+const RIDER_PAYOUT_THRESHOLD = 500;
+const RIDER_PAYOUT_TIME_LABEL = "7:30 PM";
+
 // ── Payout Sheet ──────────────────────────────────────────────────────────────
 // ── Payout Details Modal ───────────────────────────────────────────────────
-function PayoutSettingsModal({ riderId, onClose, onSaved, existingDetails }) {
-    const [banks, setBanks] = useState([]);
-    const [loadingBanks, setLoadingBanks] = useState(false);
-    const [accountNumber, setAccountNumber] = useState(existingDetails?.accountNumber || "");
-    const [selectedBank, setSelectedBank] = useState(existingDetails?.bankCode || "");
-    const [resolving, setResolving] = useState(false);
-    const [resolvedName, setResolvedName] = useState("");
-    const [saving, setSaving] = useState(false);
-
-    const resolveTimeout = useRef(null);
-
-    useEffect(() => {
-        const fetchBanks = async () => {
-            setLoadingBanks(true);
-            try {
-                const res = await getBankList();
-                if (res.banks) {
-                    const seen = new Set();
-                    const unique = res.banks.filter(b => {
-                        if (seen.has(b.code)) return false;
-                        seen.add(b.code);
-                        return true;
-                    });
-                    setBanks(unique);
-                }
-            } catch { } finally {
-                setLoadingBanks(false);
-            }
-        };
-        fetchBanks();
-    }, []);
-
-    useEffect(() => {
-        if (accountNumber.length !== 10 || !selectedBank) {
-            setResolvedName("");
-            return;
-        }
-        clearTimeout(resolveTimeout.current);
-        resolveTimeout.current = setTimeout(async () => {
-            setResolving(true);
-            try {
-                const res = await resolveRiderAccountName(riderId, accountNumber, selectedBank);
-                setResolvedName(res?.data?.accountName || "");
-            } catch {
-                setResolvedName("");
-                toast.error("Could not verify account.");
-            } finally {
-                setResolving(false);
-            }
-        }, 600);
-        return () => clearTimeout(resolveTimeout.current);
-    }, [accountNumber, selectedBank, riderId]);
-
-    const handleSave = async () => {
-        if (!resolvedName || !selectedBank || accountNumber.length !== 10) return;
-        const bankObj = banks.find(b => b.code === selectedBank);
-        setSaving(true);
-        try {
-            await saveRiderBankAccount(riderId, {
-                accountNumber,
-                bankCode: selectedBank,
-                bankName: bankObj?.name || "",
-            });
-            toast.success("Bank account saved!");
-            onSaved();
-            onClose();
-        } catch (err) {
-            toast.error(err?.response?.data?.message || "Failed to save bank account.");
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-sm bg-white dark:bg-[#111318] rounded p-4 shadow-2xl border border-white/5"
-            >
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Bank Details</h3>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-white"><X size={20} /></button>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Number</label>
-                        <input
-                            type="tel"
-                            maxLength={10}
-                            value={accountNumber}
-                            onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-                            className="w-full h-12 rounded bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-4 text-base font-black tracking-widest"
-                            placeholder="0123456789"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bank</label>
-                        <select
-                            value={selectedBank}
-                            onChange={e => setSelectedBank(e.target.value)}
-                            className="w-full h-12 rounded bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 px-4 text-xs font-black uppercase tracking-widest"
-                        >
-                            <option value="">Choose Bank</option>
-                            {banks.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
-                        </select>
-                    </div>
-
-                    <AnimatePresence>
-                        {(resolving || resolvedName) && (
-                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-green-500/10 border border-green-500/20 rounded">
-                                <p className="text-[10px] font-black text-green-500 uppercase tracking-widest leading-none mb-1">
-                                    {resolving ? "Verifying..." : "Account Name"}
-                                </p>
-                                <p className="text-sm font-black text-gray-900 dark:text-white">{resolvedName || "..."}</p>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    <button
-                        onClick={handleSave}
-                        disabled={!resolvedName || saving}
-                        className="w-full h-12 rounded bg-orange-600 text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2"
-                    >
-                        {saving ? <Loader2 className="animate-spin" size={16} /> : "Save Settings"}
-                    </button>
-                </div>
-            </motion.div>
-        </div>
-    );
-}
-
 function PayoutScheduleInfo({ balance, bankAccount }) {
     const now = new Date();
-    const isAfter8PM = now.getHours() >= 20;
-    const scheduledDay = isAfter8PM ? "Tomorrow" : "Today";
+    const payoutToday = new Date();
+    payoutToday.setHours(19, 30, 0, 0);
+    const scheduledDay = now > payoutToday ? "Tomorrow" : "Today";
+    const isEligible = balance >= RIDER_PAYOUT_THRESHOLD;
 
     return (
         <div className="bg-blue-500/5 border border-blue-500/10 rounded p-4 space-y-3">
@@ -189,11 +48,13 @@ function PayoutScheduleInfo({ balance, bankAccount }) {
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <p className="text-[9px] font-black text-blue-500/60 uppercase tracking-widest">Time</p>
-                    <p className="text-xs font-black text-gray-900 dark:text-white uppercase">{scheduledDay} @ 8:00 PM</p>
+                    <p className="text-xs font-black text-gray-900 dark:text-white uppercase">{scheduledDay} @ {RIDER_PAYOUT_TIME_LABEL}</p>
                 </div>
                 <div>
                     <p className="text-[9px] font-black text-blue-500/60 uppercase tracking-widest">Amount</p>
-                    <p className="text-xs font-black text-gray-900 dark:text-white">₦{balance.toLocaleString()}</p>
+                    <p className="text-xs font-black text-gray-900 dark:text-white">
+                        {isEligible ? `₦${balance.toLocaleString()}` : `Minimum ₦${RIDER_PAYOUT_THRESHOLD.toLocaleString()}`}
+                    </p>
                 </div>
             </div>
 
@@ -206,7 +67,7 @@ function PayoutScheduleInfo({ balance, bankAccount }) {
                 </div>
             ) : (
                 <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">
-                    Link a bank account below to receive payouts.
+                    Payout settings are temporarily locked for security.
                 </p>
             )}
         </div>
@@ -220,7 +81,6 @@ export default function RiderWalletPage() {
     const [wallet, setWallet] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [showPayoutSettings, setShowPayoutSettings] = useState(false);
     const [bankAccount, setBankAccount] = useState(null);
 
     const riderId = rider?._id || rider?.id;
@@ -353,13 +213,10 @@ export default function RiderWalletPage() {
                     bankAccount={bankAccount}
                 />
 
-                <button
-                    onClick={() => setShowPayoutSettings(true)}
-                    className="w-full bg-gray-900 dark:bg-white text-white dark:text-black font-black py-3 rounded flex items-center justify-center gap-2 active:scale-95 transition-all text-sm"
-                >
+                <div className="w-full bg-gray-900/80 dark:bg-white/10 text-white dark:text-white font-black py-3 rounded flex items-center justify-center gap-2 text-sm border border-white/10">
                     <Building2 size={17} />
-                    {bankAccount ? "Bank Settings" : "Link Bank Account"}
-                </button>
+                    Payout Settings Locked
+                </div>
 
                 {/* Transaction History */}
                 <div className="space-y-3">
@@ -434,21 +291,11 @@ export default function RiderWalletPage() {
                         <h4 className="font-black text-xs uppercase tracking-widest">Wallet Policy</h4>
                     </div>
                     <p className="text-gray-500 text-xs font-medium leading-relaxed">
-                        Earnings credit instantly after delivery. Payouts are made automatically every day at 8:00 PM (minimum balance of ₦1,500).
+                        Earnings credit instantly after delivery. Payouts are made automatically every day at {RIDER_PAYOUT_TIME_LABEL} (minimum balance of ₦{RIDER_PAYOUT_THRESHOLD.toLocaleString()}).
                     </p>
                 </div>
             </div>
 
-            <AnimatePresence>
-                {showPayoutSettings && (
-                    <PayoutSettingsModal
-                        riderId={riderId}
-                        existingDetails={bankAccount}
-                        onClose={() => setShowPayoutSettings(false)}
-                        onSaved={fetchPayoutDetails}
-                    />
-                )}
-            </AnimatePresence>
         </>
     );
 }
