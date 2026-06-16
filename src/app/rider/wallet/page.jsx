@@ -82,6 +82,8 @@ export default function RiderWalletPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [bankAccount, setBankAccount] = useState(null);
+    const [withdrawals, setWithdrawals] = useState([]);
+    const [activeTab, setActiveTab] = useState("ledger"); // ledger | payouts
 
     const riderId = rider?._id || rider?.id;
 
@@ -92,6 +94,15 @@ export default function RiderWalletPage() {
         try {
             const res = await getRiderWallet(riderId);
             setWallet(res?.data || res);
+
+            // Fetch withdrawals
+            try {
+                const historyRes = await getRiderWithdrawalHistory(riderId);
+                setWithdrawals(historyRes?.data || historyRes || []);
+            } catch (historyErr) {
+                console.error("Failed to fetch rider withdrawal history:", historyErr);
+                setWithdrawals([]);
+            }
         } catch {
             toast.error("Failed to update wallet balance");
         } finally {
@@ -218,67 +229,150 @@ export default function RiderWalletPage() {
                     Payout Settings Locked
                 </div>
 
-                {/* Transaction History */}
+                {/* Transaction & Payout History */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-1.5">
-                            <Clock className="text-orange-500" size={15} />
-                            Transaction History
-                        </h2>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{transactions.length} record(s)</span>
+                        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-md">
+                            <button
+                                onClick={() => setActiveTab("ledger")}
+                                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    activeTab === "ledger"
+                                        ? 'bg-white dark:bg-[#1A1D23] text-gray-900 dark:text-white shadow-sm'
+                                        : 'text-gray-500'
+                                }`}
+                            >
+                                Ledger
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("payouts")}
+                                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    activeTab === "payouts"
+                                        ? 'bg-white dark:bg-[#1A1D23] text-gray-900 dark:text-white shadow-sm'
+                                        : 'text-gray-500'
+                                }`}
+                            >
+                                Payouts
+                            </button>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                            {activeTab === "ledger" ? `${transactions.length} record(s)` : `${withdrawals.length} record(s)`}
+                        </span>
                     </div>
 
                     <div className="space-y-2">
                         <AnimatePresence mode="popLayout">
-                            {transactions.length > 0 ? (
-                                transactions.map((tx, idx) => (
+                            {activeTab === "ledger" ? (
+                                transactions.length > 0 ? (
+                                    transactions.map((tx, idx) => (
+                                        <motion.div
+                                            key={tx._id || idx}
+                                            initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.04 }}
+                                            className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group"
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${tx.type === "credit"
+                                                    ? "bg-green-500/10 text-green-600 dark:text-green-500"
+                                                    : "bg-red-500/10 text-red-600 dark:text-red-500"
+                                                    }`}>
+                                                    {tx.type === "credit" ? <ArrowUpCircle size={18} /> : <ArrowDownCircle size={18} />}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors uppercase tracking-tight">
+                                                        {tx.description || (tx.type === "credit" ? "Order Earning" : "Wallet Withdrawal")}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-500 font-bold mt-0.5 flex items-center gap-1 uppercase tracking-widest">
+                                                        <Calendar size={9} />
+                                                        {new Date(tx.date || tx.createdAt).toLocaleDateString(undefined, {
+                                                            month: "short", day: "numeric", year: "numeric",
+                                                            hour: "2-digit", minute: "2-digit",
+                                                        })}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`text-sm font-black ${tx.type === "credit" ? "text-green-500" : "text-red-500"}`}>
+                                                    {tx.type === "credit" ? "+" : "-"}₦{tx.amount.toLocaleString()}
+                                                </p>
+                                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Done</p>
+                                            </div>
+                                        </motion.div>
+                                    ))
+                                ) : (
                                     <motion.div
-                                        key={tx._id || idx}
-                                        initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.04 }}
-                                        className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group"
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                        className="bg-white dark:bg-[#1A1D23] border border-dashed border-gray-200 dark:border-white/5 rounded p-8 flex flex-col items-center justify-center text-center"
                                     >
-                                        <div className="flex items-center gap-2.5">
-                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${tx.type === "credit"
-                                                ? "bg-green-500/10 text-green-600 dark:text-green-500"
-                                                : "bg-red-500/10 text-red-600 dark:text-red-500"
-                                                }`}>
-                                                {tx.type === "credit" ? <ArrowUpCircle size={18} /> : <ArrowDownCircle size={18} />}
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors uppercase tracking-tight">
-                                                    {tx.description || (tx.type === "credit" ? "Order Earning" : "Wallet Withdrawal")}
-                                                </p>
-                                                <p className="text-[10px] text-gray-500 font-bold mt-0.5 flex items-center gap-1 uppercase tracking-widest">
-                                                    <Calendar size={9} />
-                                                    {new Date(tx.date || tx.createdAt).toLocaleDateString(undefined, {
-                                                        month: "short", day: "numeric", year: "numeric",
-                                                        hour: "2-digit", minute: "2-digit",
-                                                    })}
-                                                </p>
-                                            </div>
+                                        <div className="w-12 h-12 rounded bg-black/5 dark:bg-white/5 flex items-center justify-center mb-3 text-gray-400 dark:text-gray-600">
+                                            <Clock size={24} />
                                         </div>
-                                        <div className="text-right">
-                                            <p className={`text-sm font-black ${tx.type === "credit" ? "text-green-500" : "text-red-500"}`}>
-                                                {tx.type === "credit" ? "+" : "-"}₦{tx.amount.toLocaleString()}
-                                            </p>
-                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Done</p>
-                                        </div>
+                                        <h3 className="text-gray-900 dark:text-white font-black text-sm mb-1">No Transactions Yet</h3>
+                                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest max-w-[180px] leading-relaxed">
+                                            Complete a delivery to see earnings here.
+                                        </p>
                                     </motion.div>
-                                ))
+                                )
                             ) : (
-                                <motion.div
-                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                    className="bg-white dark:bg-[#1A1D23] border border-dashed border-gray-200 dark:border-white/5 rounded p-8 flex flex-col items-center justify-center text-center"
-                                >
-                                    <div className="w-12 h-12 rounded bg-black/5 dark:bg-white/5 flex items-center justify-center mb-3 text-gray-400 dark:text-gray-600">
-                                        <Clock size={24} />
-                                    </div>
-                                    <h3 className="text-gray-900 dark:text-white font-black text-sm mb-1">No Transactions Yet</h3>
-                                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest max-w-[180px] leading-relaxed">
-                                        Complete a delivery to see earnings here.
-                                    </p>
-                                </motion.div>
+                                withdrawals.length > 0 ? (
+                                    withdrawals.map((withdraw, idx) => {
+                                        const statusStyle = withdrawalStatusStyle(withdraw.status);
+                                        return (
+                                            <motion.div
+                                                key={withdraw._id || idx}
+                                                initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.04 }}
+                                                className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group"
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-red-500/10 text-red-600 dark:text-red-500`}>
+                                                        <ArrowDownCircle size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors uppercase tracking-tight">
+                                                            Payout to {withdraw.bankName}
+                                                        </p>
+                                                        <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none mt-1">
+                                                            {withdraw.accountNumber} • Ref: {withdraw.paystackReference || "Pending"}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-500 font-bold mt-1.5 flex items-center gap-1 uppercase tracking-widest">
+                                                            <Calendar size={9} />
+                                                            {new Date(withdraw.initiatedAt || withdraw.createdAt).toLocaleDateString(undefined, {
+                                                                month: "short", day: "numeric", year: "numeric",
+                                                                hour: "2-digit", minute: "2-digit",
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right flex flex-col items-end gap-1">
+                                                    <p className="text-sm font-black text-red-500">
+                                                        -₦{withdraw.netAmount.toLocaleString()}
+                                                    </p>
+                                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${statusStyle.bg} ${statusStyle.text} border-current`}>
+                                                        {statusStyle.label}
+                                                    </span>
+                                                    {withdraw.status === "failed" && withdraw.failureReason && (
+                                                        <p className="text-[8px] text-red-500 font-bold max-w-[120px] leading-tight text-right break-words mt-0.5">
+                                                            {withdraw.failureReason}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })
+                                ) : (
+                                    <motion.div
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                        className="bg-white dark:bg-[#1A1D23] border border-dashed border-gray-200 dark:border-white/5 rounded p-8 flex flex-col items-center justify-center text-center"
+                                    >
+                                        <div className="w-12 h-12 rounded bg-black/5 dark:bg-white/5 flex items-center justify-center mb-3 text-gray-400 dark:text-gray-600">
+                                            <Clock size={24} />
+                                        </div>
+                                        <h3 className="text-gray-900 dark:text-white font-black text-sm mb-1">No Payouts Yet</h3>
+                                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest max-w-[180px] leading-relaxed">
+                                            Payouts will show up here after being initiated.
+                                        </p>
+                                    </motion.div>
+                                )
                             )}
                         </AnimatePresence>
                     </div>
