@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Bike, Navigation, MapPin, Package, CheckCircle2, AlertCircle,
-    Wallet, Star, Phone, Loader2, Activity, RefreshCcw
+    Wallet, Star, Phone, Loader2, Activity, RefreshCcw, AlertTriangle
 } from "lucide-react";
 import { useRider } from "@/app/context/RiderContext";
 import { getActiveRiderOrder, getPendingOffers, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery, acceptOffer, toggleRiderAvailability } from "@/app/lib/riderApi";
@@ -434,6 +434,35 @@ export default function RiderDashboard() {
                                                 <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
                                             </div>
                                         </div>
+
+                                        {/* ── Previous Rider Warning Banner ── */}
+                                        {offer.hasPreviousRider && (
+                                            <div className={`mt-3 p-2.5 rounded-lg flex items-start gap-2 border ${
+                                                offer.previousRider?.foodPickedUp
+                                                    ? "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30"
+                                                    : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30"
+                                            }`}>
+                                                <AlertTriangle size={13} className={`shrink-0 mt-0.5 ${
+                                                    offer.previousRider?.foodPickedUp ? "text-red-600" : "text-amber-600"
+                                                }`} />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1 ${
+                                                        offer.previousRider?.foodPickedUp ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"
+                                                    }`}>
+                                                        ⚠️ Previously Assigned
+                                                    </p>
+                                                    {offer.previousRider?.foodPickedUp ? (
+                                                        <p className="text-[9px] font-bold text-red-600/90 dark:text-red-300/90 leading-relaxed">
+                                                            Food collected by {offer.previousRider?.name || "previous rider"} ({offer.previousRider?.phone || "no phone"}). You must retrieve it from them before delivering.
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-[9px] font-bold text-amber-600/90 dark:text-amber-300/90 leading-relaxed">
+                                                            Previous rider {offer.previousRider?.name || ""} was unable to deliver. Food is still at the restaurant — pick up as normal.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="flex items-center justify-between gap-4 mt-3">
                                             <button

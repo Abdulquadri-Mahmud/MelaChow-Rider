@@ -128,6 +128,33 @@ export const getRiderSpecificOrder = async (riderId, orderId) => {
     return response.data;
 };
 
+// ── Delivery Overhaul — Termination & Disputed Delivery ──────────────────────
+
+/**
+ * Rider-initiated order termination.
+ * Resets the order back to ready_for_pickup and re-broadcasts.
+ * Logs a strike if food was already picked up.
+ *
+ * POST /riders/:riderId/orders/:orderId/terminate
+ * Body: { note }
+ */
+export const terminateOrder = async (riderId, orderId, note = "") => {
+    const response = await API.post(`/riders/${riderId}/orders/${orderId}/terminate`, { note });
+    return response.data;
+};
+
+/**
+ * Rider flags an order as undeliverable (food spoiled / previous rider unreachable).
+ * Triggers vendor remake window (15 min) + admin escalation if no response.
+ *
+ * POST /riders/:riderId/orders/:orderId/undeliverable
+ * Body: { reason }
+ */
+export const reportUndeliverable = async (riderId, orderId, reason = "") => {
+    const response = await API.post(`/riders/${riderId}/orders/${orderId}/undeliverable`, { reason });
+    return response.data;
+};
+
 // ── Payout API ────────────────────────────────────────────────────────────────
 
 // Fetch live bank list from Paystack via rider-scoped route.
