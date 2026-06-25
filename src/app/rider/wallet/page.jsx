@@ -16,6 +16,9 @@ import {
     Building2,
     Send,
     CheckCircle2,
+    X,
+    Lock,
+    DollarSign,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRider } from "@/app/context/RiderContext";
@@ -23,6 +26,7 @@ import {
     getRiderWallet,
     getRiderBankAccount,
     getRiderWithdrawalHistory,
+    initiateWithdrawal,
 } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 
@@ -39,7 +43,7 @@ function PayoutScheduleInfo({ balance, bankAccount }) {
     const isEligible = balance >= RIDER_PAYOUT_THRESHOLD;
 
     return (
-        <div className="bg-blue-500/5 border border-blue-500/10 rounded p-4 space-y-3">
+        <div className="bg-blue-500/5 border border-blue-500/10 rounded p-3 space-y-3">
             <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                 <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Automatic Payout Scheduled</h4>
@@ -84,6 +88,11 @@ export default function RiderWalletPage() {
     const [bankAccount, setBankAccount] = useState(null);
     const [withdrawals, setWithdrawals] = useState([]);
     const [activeTab, setActiveTab] = useState("ledger"); // ledger | payouts
+    const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+    const [withdrawAmount, setWithdrawAmount] = useState("");
+    const [withdrawing, setWithdrawing] = useState(false);
+
+    const PAYSTACK_FEE = 0; // Platform absorbs the Paystack transfer fee for riders
 
     const riderId = rider?._id || rider?.id;
 
@@ -152,6 +161,29 @@ export default function RiderWalletPage() {
             case "failed": return { bg: "bg-red-500/10", text: "text-red-500", label: "Failed" };
             case "reversed": return { bg: "bg-orange-500/10", text: "text-orange-500", label: "Reversed" };
             default: return { bg: "bg-gray-500/10", text: "text-gray-500", label: status };
+        }
+    };
+
+    const handleWithdraw = async () => {
+        const amount = Number(withdrawAmount);
+        if (!amount || amount < RIDER_PAYOUT_THRESHOLD) {
+            toast.error(`Minimum withdrawal is ₦${RIDER_PAYOUT_THRESHOLD.toLocaleString()}`);
+            return;
+        }
+        if (amount > balance) {
+            toast.error("Amount exceeds your available balance");
+            return;
+        }
+        setWithdrawing(true);
+        try {
+            const res = await initiateWithdrawal(riderId, amount);
+            toast.success(res?.message || "Withdrawal initiated successfully!");
+            setWithdrawModalOpen(false);
+            await fetchWallet(true);
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Withdrawal failed. Please try again.");
+        } finally {
+            setWithdrawing(false);
         }
     };
 
@@ -224,10 +256,27 @@ export default function RiderWalletPage() {
                     bankAccount={bankAccount}
                 />
 
-                <div className="w-full bg-gray-900/80 dark:bg-white/10 text-white dark:text-white font-black py-3 rounded flex items-center justify-center gap-2 text-sm border border-white/10">
-                    <Building2 size={17} />
-                    Payout Settings Locked
-                </div>
+                {/* Manual Withdraw Button */}
+                {bankAccount ? (
+                    <button
+                        onClick={() => {
+                            setWithdrawAmount("");
+                            setWithdrawModalOpen(true);
+                        }}
+                        disabled={balance < RIDER_PAYOUT_THRESHOLD}
+                        className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black py-3 rounded flex items-center justify-center gap-2 text-sm transition-all active:scale-95 shadow-md shadow-orange-600/20"
+                    >
+                        <Send size={17} />
+                        {balance < RIDER_PAYOUT_THRESHOLD
+                            ? `Min. balance ₦${RIDER_PAYOUT_THRESHOLD.toLocaleString()} to withdraw`
+                            : "Withdraw Earnings"}
+                    </button>
+                ) : (
+                    <div className="w-full bg-gray-900/80 dark:bg-white/10 text-white dark:text-white font-black py-3 rounded flex items-center justify-center gap-2 text-sm border border-white/10">
+                        <Lock size={17} />
+                        No Bank Account Linked
+                    </div>
+                )}
 
                 {/* Transaction & Payout History */}
                 <div className="space-y-3">
@@ -379,7 +428,7 @@ export default function RiderWalletPage() {
                 </div>
 
                 {/* Policy */}
-                <div className="bg-orange-500/5 border border-orange-500/10 rounded p-4 flex flex-col gap-2">
+                <div className="bg-orange-500/5 border border-orange-500/10 rounded p-3 flex flex-col gap-2">
                     <div className="flex items-center gap-1.5 text-orange-500">
                         <AlertCircle size={14} />
                         <h4 className="font-black text-xs uppercase tracking-widest">Wallet Policy</h4>
@@ -389,6 +438,102 @@ export default function RiderWalletPage() {
                     </p>
                 </div>
             </div>
+
+            {/* ── Withdrawal Modal ───────────────────────────────── */}
+            <AnimatePresence>
+                {withdrawModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => !withdrawing && setWithdrawModalOpen(false)}
+                            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 80 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 80 }}
+                            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden"
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between p-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center text-orange-600">
+                                        <DollarSign size={20} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight">Withdraw Earnings</h3>
+                                        <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Available: ₦{balance.toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => !withdrawing && setWithdrawModalOpen(false)} className="w-8 h-8 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all">
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <div className="p-3 space-y-4">
+                                {/* Bank destination */}
+                                {bankAccount && (
+                                    <div className="flex items-center gap-2.5 p-3 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                        <Building2 size={14} className="text-zinc-500 shrink-0" />
+                                        <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate">
+                                            {bankAccount.bankName} — {bankAccount.accountName} (***{bankAccount.accountNumber?.slice(-4)})
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Amount Input */}
+                                <div>
+                                    <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Amount (₦)</label>
+                                    <div className="relative mt-1.5">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-black text-sm">₦</span>
+                                        <input
+                                            type="number"
+                                            inputMode="numeric"
+                                            value={withdrawAmount}
+                                            onChange={e => setWithdrawAmount(e.target.value)}
+                                            placeholder={`Min. ${RIDER_PAYOUT_THRESHOLD.toLocaleString()}`}
+                                            className="w-full h-12 pl-8 pr-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded text-sm font-black text-zinc-900 dark:text-white outline-none focus:border-orange-500 dark:focus:border-orange-500 placeholder:text-zinc-300 placeholder:font-normal"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Fee preview */}
+                                {Number(withdrawAmount) > 0 && (
+                                    <div className="p-3 rounded bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 space-y-1.5">
+                                        <div className="flex justify-between text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
+                                            <span>Withdrawal Amount</span>
+                                            <span>₦{Number(withdrawAmount).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
+                                            <span>Processing Fee</span>
+                                            <span className="text-emerald-500 font-bold">₦0 (Absorbed by MelaChow)</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs font-black text-zinc-900 dark:text-white border-t border-blue-100 dark:border-blue-500/20 pt-1.5">
+                                            <span>You'll Receive</span>
+                                            <span className="text-orange-600">₦{Number(withdrawAmount).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* CTA */}
+                                <button
+                                    onClick={handleWithdraw}
+                                    disabled={withdrawing || !withdrawAmount || Number(withdrawAmount) < RIDER_PAYOUT_THRESHOLD || Number(withdrawAmount) > balance}
+                                    className="w-full h-12 rounded bg-orange-600 hover:bg-orange-700 text-white font-black text-sm transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 shadow-md shadow-orange-600/20"
+                                >
+                                    {withdrawing ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                                    {withdrawing ? "Processing..." : "Confirm Withdrawal"}
+                                </button>
+                                <p className="text-center text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                                    Funds transfer within 1–3 business days
+                                </p>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
         </>
     );

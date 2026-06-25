@@ -1,17 +1,231 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Bike, MapPin, Package, CheckCircle2, AlertCircle,
-    Phone, Loader2, Navigation, ArrowLeft
+    Phone, Loader2, Navigation, ArrowLeft, XCircle,
+    AlertTriangle, FileWarning
 } from "lucide-react";
 import { useRider } from "@/app/context/RiderContext";
-import { getActiveRiderOrder, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery } from "@/app/lib/riderApi";
+import {
+    getActiveRiderOrder,
+    riderPickedUpOrder,
+    requestDeliveryOTP,
+    riderConfirmDelivery,
+    terminateOrder,
+    reportUndeliverable,
+} from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
 
+// ── Termination Modal ────────────────────────────────────────────────────────
+function TerminateModal({ isOpen, onClose, onConfirm, isLoading, foodPickedUp }) {
+    const [note, setNote] = useState("");
+
+    useEffect(() => {
+        if (isOpen) setNote("");
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return (
+        <AnimatePresence>
+            <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-3">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
+                    className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                />
+                <motion.div
+                    initial={{ opacity: 0, y: 80 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 80 }}
+                    className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden"
+                >
+                    {/* Header */}
+                    <div className="p-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-10 h-10 rounded bg-red-100 dark:bg-red-500/10 flex items-center justify-center text-red-600">
+                                <XCircle size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight">
+                                    Terminate Delivery
+                                </h3>
+                                <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                                    This order will be reassigned
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Strike Warning (food already picked up) */}
+                    {foodPickedUp && (
+                        <div className="mx-3 mt-3 p-3 rounded bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 flex items-start gap-2.5">
+                            <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-widest">
+                                    Strike Warning
+                                </p>
+                                <p className="text-xs font-bold text-red-600/90 dark:text-red-300/90 mt-1 leading-relaxed">
+                                    You already picked up this food. Terminating now will log a strike against your account. 2 strikes = 48-hour suspension.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Note Input */}
+                    <div className="p-3 space-y-4">
+                        <div>
+                            <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">
+                                Reason (optional)
+                            </label>
+                            <textarea
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="e.g. Cannot find address, personal emergency..."
+                                rows={3}
+                                className="w-full mt-1.5 px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-red-500 dark:focus:border-red-500 resize-none placeholder:text-zinc-400 placeholder:font-normal"
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={onClose}
+                                disabled={isLoading}
+                                className="flex-1 h-11 rounded border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => onConfirm(note)}
+                                disabled={isLoading}
+                                className="flex-[2] h-11 rounded bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isLoading ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                                {isLoading ? "Processing..." : "Confirm Termination"}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        </AnimatePresence>
+    );
+}
+
+// ── Undeliverable Modal ───────────────────────────────────────────────────────
+function UndeliverableModal({ isOpen, onClose, onConfirm, isLoading, previousRider }) {
+    const [reason, setReason] = useState("");
+
+    useEffect(() => {
+        if (isOpen) setReason("");
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return (
+        <AnimatePresence>
+            <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-3">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
+                    className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                />
+                <motion.div
+                    initial={{ opacity: 0, y: 80 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 80 }}
+                    className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden"
+                >
+                    {/* Header */}
+                    <div className="p-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-10 h-10 rounded bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-amber-600">
+                                <FileWarning size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight">
+                                    Report Undeliverable
+                                </h3>
+                                <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                                    Vendor gets 15 min to remake
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Previous Rider Context */}
+                    {previousRider && (
+                        <div className="mx-3 mt-3 p-3 rounded bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 space-y-1.5">
+                            <p className="text-[9px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                                Previous Rider Info
+                            </p>
+                            <p className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                                {previousRider.name} — <a href={`tel:${previousRider.phone}`} className="underline">{previousRider.phone}</a>
+                            </p>
+                            {previousRider.foodPickedUp && (
+                                <p className="text-[10px] font-bold text-amber-700/80 dark:text-amber-400/80">
+                                    🍔 Food was collected by previous rider — contact them to retrieve or confirm it's spoiled.
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Reason Input */}
+                    <div className="p-3 space-y-4">
+                        <div className="p-3 rounded bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20">
+                            <p className="text-[9px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-1">
+                                What happens next
+                            </p>
+                            <p className="text-[10px] font-bold text-blue-600/90 dark:text-blue-300/90 leading-relaxed">
+                                The vendor will be asked to remake the order. If they don't respond within 15 minutes, the case is escalated to admin for resolution.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">
+                                Reason
+                            </label>
+                            <textarea
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                placeholder="e.g. Food is spoiled, previous rider unreachable..."
+                                rows={3}
+                                className="w-full mt-1.5 px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-amber-500 dark:focus:border-amber-500 resize-none placeholder:text-zinc-400 placeholder:font-normal"
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={onClose}
+                                disabled={isLoading}
+                                className="flex-1 h-11 rounded border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => onConfirm(reason)}
+                                disabled={isLoading || !reason.trim()}
+                                className="flex-[2] h-11 rounded bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isLoading ? <Loader2 size={14} className="animate-spin" /> : <FileWarning size={14} />}
+                                {isLoading ? "Submitting..." : "Report & Notify Vendor"}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        </AnimatePresence>
+    );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function OngoingDeliveryPage() {
     const router = useRouter();
     const { rider, refreshProfile } = useRider();
@@ -33,6 +247,12 @@ export default function OngoingDeliveryPage() {
         return { step: "idle", otp: "", sending: false, confirming: false, method: "", message: "" };
     });
 
+    // ── Termination & Undeliverable state ────────────────────────────────────
+    const [terminateModalOpen, setTerminateModalOpen] = useState(false);
+    const [undeliverableModalOpen, setUndeliverableModalOpen] = useState(false);
+    const [terminateLoading, setTerminateLoading] = useState(false);
+    const [undeliverableLoading, setUndeliverableLoading] = useState(false);
+
     const riderId = rider?._id || rider?.id;
 
     // Persist OTP state
@@ -51,7 +271,6 @@ export default function OngoingDeliveryPage() {
             const order = data?.data?.order || data?.order || (data?._id ? data : null);
             setActiveOrder(order);
             if (!order && !loading) {
-                // If order is completed or gone, go back to dashboard
                 router.replace("/rider/dashboard");
             }
         } catch (error) {
@@ -67,7 +286,7 @@ export default function OngoingDeliveryPage() {
 
     useEffect(() => {
         fetchActiveOrder();
-        const interval = setInterval(() => fetchActiveOrder(), 5000); // Quick sync for ongoing orders
+        const interval = setInterval(() => fetchActiveOrder(), 5000);
         return () => clearInterval(interval);
     }, [riderId]);
 
@@ -140,6 +359,37 @@ export default function OngoingDeliveryPage() {
         }
     };
 
+    const handleTerminate = async (note) => {
+        if (!activeOrder || !riderId) return;
+        setTerminateLoading(true);
+        try {
+            const res = await terminateOrder(riderId, activeOrder._id, note);
+            toast.success(res.message || "Order terminated. A new rider will be assigned.");
+            setTerminateModalOpen(false);
+            await refreshProfile();
+            router.replace("/rider/dashboard");
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed to terminate order.");
+        } finally {
+            setTerminateLoading(false);
+        }
+    };
+
+    const handleReportUndeliverable = async (reason) => {
+        if (!activeOrder || !riderId) return;
+        setUndeliverableLoading(true);
+        try {
+            const res = await reportUndeliverable(riderId, activeOrder._id, reason);
+            toast.success(res.message || "Reported. Vendor has been notified.");
+            setUndeliverableModalOpen(false);
+            await fetchActiveOrder();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed to report order.");
+        } finally {
+            setUndeliverableLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-6">
@@ -171,7 +421,14 @@ export default function OngoingDeliveryPage() {
 
     const orderLifecycleStatus = activeOrder.orderStatus || activeOrder.status;
     const isHeadingToStore = ["assigned", "rider_assigned"].includes(orderLifecycleStatus);
+    const isOutForDelivery = ["out_for_delivery", "picked_up"].includes(orderLifecycleStatus);
+    const isDisputed = orderLifecycleStatus === "disputed_delivery";
     const activeOrderTitle = isHeadingToStore ? "Head to Store" : "Out for Delivery";
+
+    // Termination is allowed any time the order is active (not disputed)
+    const canTerminate = !isDisputed && !["delivered", "cancelled", "completed"].includes(orderLifecycleStatus);
+    // Undeliverable is only relevant when the rider took over from a previous courier
+    const canReportUndeliverable = !!activeOrder.hasPreviousRider && !isDisputed;
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-14 text-zinc-900 dark:text-zinc-100">
@@ -191,7 +448,63 @@ export default function OngoingDeliveryPage() {
                 </div>
             </div>
 
-            <div className="max-w-md mx-auto mt-6">
+            <div className="max-w-md mx-auto mt-6 px-4 space-y-4">
+
+                {/* Disputed Delivery Banner */}
+                {isDisputed && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/40 flex items-start gap-3"
+                    >
+                        <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                                Order Disputed
+                            </p>
+                            <p className="text-xs font-bold text-amber-600/90 dark:text-amber-300/90 mt-1 leading-relaxed">
+                                Vendor has been notified and has 15 minutes to respond. If no response, admin will intervene.
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Previous Rider Warning Banner */}
+                {activeOrder.hasPreviousRider && activeOrder.previousRider && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`p-4 rounded-xl border flex items-start gap-3 ${activeOrder.previousRider.foodPickedUp
+                            ? "bg-red-50 dark:bg-red-500/10 border-red-300 dark:border-red-500/40"
+                            : "bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/40"
+                            }`}
+                    >
+                        <AlertCircle size={18} className={`shrink-0 mt-0.5 ${activeOrder.previousRider.foodPickedUp ? "text-red-600" : "text-amber-600"}`} />
+                        <div className="flex-1 min-w-0">
+                            <p className={`text-[10px] font-black uppercase tracking-widest ${activeOrder.previousRider.foodPickedUp ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>
+                                ⚠️ Previously Assigned Rider
+                            </p>
+                            <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 mt-1">
+                                {activeOrder.previousRider.name}
+                                {" · "}
+                                <a href={`tel:${activeOrder.previousRider.phone}`} className="underline">
+                                    {activeOrder.previousRider.phone}
+                                </a>
+                            </p>
+                            {activeOrder.previousRider.foodPickedUp ? (
+                                <p className="text-[10px] font-bold text-red-600/90 dark:text-red-300/90 mt-1 leading-relaxed">
+                                    🍔 Food already collected — contact previous rider to collect the order before delivering.
+                                </p>
+                            ) : (
+                                <p className="text-[10px] font-bold text-amber-600/90 dark:text-amber-300/90 mt-1 leading-relaxed">
+                                    ✅ Food still at restaurant — pick up as normal.
+                                </p>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Main Card */}
                 <div className="relative overflow-hidden bg-white dark:bg-[#1A1D23] rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm p-5">
                     {/* Header Badge */}
                     <div className="flex justify-between items-start mb-6">
@@ -259,29 +572,22 @@ export default function OngoingDeliveryPage() {
                                     const quantity = Number(item.quantity) || 1;
                                     const options = item.selected_options || [];
                                     const portionLabel = item.portion_label || item.portion || "";
-                                    
                                     let portionText = portionLabel || (quantity > 1 ? "portions" : "portion");
-
                                     let fullSentence = `Deliver ${quantity} ${portionText} of ${itemName}`;
                                     if (options.length > 0) {
                                         const optionsTextList = options.map((opt) => `${Number(opt.quantity) > 0 ? (Number(opt.quantity) * quantity) + 'x ' : ''}${opt.label || opt.name}`);
                                         fullSentence += `, with ${optionsTextList.length === 1 ? optionsTextList[0] : optionsTextList.length === 2 ? optionsTextList.join(' and ') : optionsTextList.slice(0, -1).join(', ') + ', and ' + optionsTextList.slice(-1)}`;
                                     }
                                     fullSentence += ".";
-
                                     return (
                                         <div key={idx} className="flex gap-2.5">
                                             <div className="p-1 h-fit bg-zinc-200 dark:bg-zinc-800 rounded text-zinc-500 shrink-0">
                                                 <Package size={10} />
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 leading-snug">
-                                                    {fullSentence}
-                                                </p>
+                                                <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 leading-snug">{fullSentence}</p>
                                                 {item.note && (
-                                                    <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-1 italic font-medium">
-                                                        Note: {item.note}
-                                                    </p>
+                                                    <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-1 italic font-medium">Note: {item.note}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -304,7 +610,6 @@ export default function OngoingDeliveryPage() {
                                 </p>
                             </div>
                         </div>
-
                         <a
                             href={`tel:${activeOrder.userPhone || ""}`}
                             className="h-8 px-3 rounded bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1.5 font-black text-[10px] transition-all active:scale-95"
@@ -339,12 +644,10 @@ export default function OngoingDeliveryPage() {
                                 } else {
                                     targetAddr = activeOrder.deliveryFullAddress || "";
                                 }
-
                                 if (!targetAddr || targetAddr.trim() === "") {
                                     toast.error("Location address not found");
                                     return;
                                 }
-
                                 window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetAddr)}`);
                             }}
                             className="h-12 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-black text-xs flex items-center justify-center transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95"
@@ -368,7 +671,7 @@ export default function OngoingDeliveryPage() {
                                     </>
                                 )}
                             </button>
-                        ) : (
+                        ) : !isDisputed ? (
                             <button
                                 onClick={() => handleAction("deliver")}
                                 disabled={otpState.sending}
@@ -383,8 +686,37 @@ export default function OngoingDeliveryPage() {
                                     </>
                                 )}
                             </button>
+                        ) : (
+                            <div className="h-12 rounded bg-amber-100 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 flex items-center justify-center font-black text-[9px] uppercase tracking-widest">
+                                <AlertTriangle size={14} className="mr-1.5" />
+                                DISPUTED
+                            </div>
                         )}
                     </div>
+
+                    {/* Terminate / Undeliverable action row */}
+                    {!isDisputed && (
+                        <div className="flex gap-3 mt-3">
+                            {canTerminate && (
+                                <button
+                                    onClick={() => setTerminateModalOpen(true)}
+                                    className="flex-1 h-10 rounded border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all active:scale-95"
+                                >
+                                    <XCircle size={13} />
+                                    Cancel Order
+                                </button>
+                            )}
+                            {canReportUndeliverable && (
+                                <button
+                                    onClick={() => setUndeliverableModalOpen(true)}
+                                    className="flex-1 h-10 rounded border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1.5 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-all active:scale-95"
+                                >
+                                    <FileWarning size={13} />
+                                    Undeliverable
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -449,6 +781,24 @@ export default function OngoingDeliveryPage() {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Termination Modal */}
+            <TerminateModal
+                isOpen={terminateModalOpen}
+                onClose={() => setTerminateModalOpen(false)}
+                onConfirm={handleTerminate}
+                isLoading={terminateLoading}
+                foodPickedUp={isOutForDelivery}
+            />
+
+            {/* Undeliverable Modal */}
+            <UndeliverableModal
+                isOpen={undeliverableModalOpen}
+                onClose={() => setUndeliverableModalOpen(false)}
+                onConfirm={handleReportUndeliverable}
+                isLoading={undeliverableLoading}
+                previousRider={activeOrder?.previousRider}
+            />
         </div>
     );
 }
