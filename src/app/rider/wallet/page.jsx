@@ -8,6 +8,7 @@ import {
     ArrowDownCircle,
     Clock,
     ChevronLeft,
+    ChevronRight,
     RefreshCw,
     AlertCircle,
     Calendar,
@@ -19,6 +20,8 @@ import {
     X,
     Lock,
     DollarSign,
+    Copy,
+    Share2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRider } from "@/app/context/RiderContext";
@@ -30,7 +33,7 @@ import {
 } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 
-const RIDER_PAYOUT_THRESHOLD = 500;
+const RIDER_PAYOUT_THRESHOLD = 1500;
 const RIDER_PAYOUT_TIME_LABEL = "7:30 PM";
 
 // ── Payout Sheet ──────────────────────────────────────────────────────────────
@@ -91,6 +94,7 @@ export default function RiderWalletPage() {
     const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [withdrawing, setWithdrawing] = useState(false);
+    const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
 
     const PAYSTACK_FEE = 0; // Platform absorbs the Paystack transfer fee for riders
 
@@ -181,7 +185,8 @@ export default function RiderWalletPage() {
             setWithdrawModalOpen(false);
             await fetchWallet(true);
         } catch (err) {
-            toast.error(err?.response?.data?.message || "Withdrawal failed. Please try again.");
+            const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Withdrawal failed. Please try again.";
+            toast.error(errMsg);
         } finally {
             setWithdrawing(false);
         }
@@ -204,7 +209,7 @@ export default function RiderWalletPage() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => router.back()}
-                            className="w-8 h-8 rounded-lg bg-black/5 dark:bg-white/5 flex items-center justify-center text-gray-700 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                            className="w-8 h-8 rounded bg-black/5 dark:bg-white/5 flex items-center justify-center text-gray-700 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                         >
                             <ChevronLeft size={18} />
                         </button>
@@ -216,7 +221,7 @@ export default function RiderWalletPage() {
                     <button
                         onClick={() => fetchWallet(true)}
                         disabled={refreshing}
-                        className={`w-8 h-8 rounded-lg bg-black/5 dark:bg-white/5 flex items-center justify-center text-gray-700 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors ${refreshing ? "animate-spin opacity-50" : ""}`}
+                        className={`w-8 h-8 rounded bg-black/5 dark:bg-white/5 flex items-center justify-center text-gray-700 dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors ${refreshing ? "animate-spin opacity-50" : ""}`}
                     >
                         <RefreshCw size={15} />
                     </button>
@@ -224,10 +229,10 @@ export default function RiderWalletPage() {
 
                 {/* Balance Card */}
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                    <div className="bg-gradient-to-br from-orange-600 to-red-700 rounded p-5 overflow-hidden shadow-lg shadow-orange-600/20 relative">
+                    <div className="bg-gradient-to-br from-orange-600 to-red-700 rounded p-3 overflow-hidden shadow-lg shadow-orange-600/20 relative">
                         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-2xl pointer-events-none" />
                         <div className="relative z-10">
-                            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white/90 mb-3">
+                            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest text-white/90 mb-2">
                                 <RefreshCw size={9} className={refreshing ? "animate-spin" : ""} />
                                 Available Balance
                             </div>
@@ -236,16 +241,6 @@ export default function RiderWalletPage() {
                                 <span className="text-4xl font-black text-white tracking-tight">
                                     {balance.toLocaleString()}
                                 </span>
-                            </div>
-                            <div className="mt-4 grid grid-cols-2 gap-3">
-                                <div className="bg-white/10 backdrop-blur-md rounded p-3 border border-white/10">
-                                    <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Lifetime</p>
-                                    <p className="text-base font-black text-white">₦{Number(rider?.totalEarnings || 0).toLocaleString()}</p>
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-md rounded p-3 border border-white/10">
-                                    <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Deliveries</p>
-                                    <p className="text-base font-black text-white">{rider?.totalDeliveries || 0}</p>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -281,7 +276,7 @@ export default function RiderWalletPage() {
                 {/* Transaction & Payout History */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-md">
+                        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded">
                             <button
                                 onClick={() => setActiveTab("ledger")}
                                 className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -303,9 +298,18 @@ export default function RiderWalletPage() {
                                 Payouts
                             </button>
                         </div>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                            {activeTab === "ledger" ? `${transactions.length} record(s)` : `${withdrawals.length} record(s)`}
-                        </span>
+                        {activeTab === "ledger" ? (
+                            <button
+                                onClick={() => router.push("/rider/transactions")}
+                                className="text-[10px] font-black text-orange-500 hover:text-orange-600 uppercase tracking-widest flex items-center gap-0.5"
+                            >
+                                View All Transactions <ChevronRight size={10} />
+                            </button>
+                        ) : (
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                {withdrawals.length} record(s)
+                            </span>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -320,7 +324,7 @@ export default function RiderWalletPage() {
                                             className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group"
                                         >
                                             <div className="flex items-center gap-2.5">
-                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${tx.type === "credit"
+                                                <div className={`w-9 h-9 rounded flex items-center justify-center shrink-0 ${tx.type === "credit"
                                                     ? "bg-green-500/10 text-green-600 dark:text-green-500"
                                                     : "bg-red-500/10 text-red-600 dark:text-red-500"
                                                     }`}>
@@ -370,20 +374,18 @@ export default function RiderWalletPage() {
                                                 key={withdraw._id || idx}
                                                 initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.04 }}
-                                                className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group"
+                                                onClick={() => setSelectedWithdrawal(withdraw)}
+                                                className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded p-3 flex items-center justify-between hover:border-orange-500/20 transition-all group cursor-pointer"
                                             >
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-red-500/10 text-red-600 dark:text-red-500`}>
+                                                    <div className={`w-9 h-9 rounded flex items-center justify-center shrink-0 bg-red-500/10 text-red-600 dark:text-red-500`}>
                                                         <ArrowDownCircle size={18} />
                                                     </div>
                                                     <div>
                                                         <p className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors uppercase tracking-tight">
                                                             Payout to {withdraw.bankName}
                                                         </p>
-                                                        <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none mt-1">
-                                                            {withdraw.accountNumber} • Ref: {withdraw.paystackReference || "Pending"}
-                                                        </p>
-                                                        <p className="text-[10px] text-gray-500 font-bold mt-1.5 flex items-center gap-1 uppercase tracking-widest">
+                                                        <p className="text-[10px] text-gray-500 font-bold mt-1 flex items-center gap-1 uppercase tracking-widest">
                                                             <Calendar size={9} />
                                                             {new Date(withdraw.initiatedAt || withdraw.createdAt).toLocaleDateString(undefined, {
                                                                 month: "short", day: "numeric", year: "numeric",
@@ -392,18 +394,18 @@ export default function RiderWalletPage() {
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right flex flex-col items-end gap-1">
+                                                <div className="text-right flex flex-col items-end gap-1.5 shrink-0 pl-2">
                                                     <p className="text-sm font-black text-red-500">
                                                         -₦{withdraw.netAmount.toLocaleString()}
                                                     </p>
-                                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${statusStyle.bg} ${statusStyle.text} border-current`}>
-                                                        {statusStyle.label}
-                                                    </span>
-                                                    {withdraw.status === "failed" && withdraw.failureReason && (
-                                                        <p className="text-[8px] text-red-500 font-bold max-w-[120px] leading-tight text-right break-words mt-0.5">
-                                                            {withdraw.failureReason}
-                                                        </p>
-                                                    )}
+                                                    <div className="flex items-center gap-1">
+                                                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${statusStyle.bg} ${statusStyle.text} border-current`}>
+                                                            {statusStyle.label}
+                                                        </span>
+                                                        {withdraw.status === "failed" && (
+                                                            <AlertCircle size={10} className="text-red-500 animate-pulse shrink-0" />
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </motion.div>
                                         );
@@ -442,7 +444,7 @@ export default function RiderWalletPage() {
             {/* ── Withdrawal Modal ───────────────────────────────── */}
             <AnimatePresence>
                 {withdrawModalOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+                    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-3">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -451,9 +453,9 @@ export default function RiderWalletPage() {
                             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                         />
                         <motion.div
-                            initial={{ opacity: 0, y: 80 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 80 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
                             className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden"
                         >
                             {/* Header */}
@@ -529,6 +531,168 @@ export default function RiderWalletPage() {
                                 <p className="text-center text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
                                     Funds transfer within 1–3 business days
                                 </p>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Centered Payout Details Modal */}
+            <AnimatePresence>
+                {selectedWithdrawal && (
+                    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-3">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedWithdrawal(null)}
+                            className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative w-full max-w-md bg-zinc-950 rounded border border-zinc-800 shadow-2xl p-3 space-y-4 text-white overflow-hidden max-h-[90vh] overflow-y-auto"
+                        >
+                            {/* Header Close button */}
+                            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                                <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Payout Details</span>
+                                <button onClick={() => setSelectedWithdrawal(null)} className="text-zinc-400 hover:text-white">
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            {/* Paystack Styled Badge & Header */}
+                            <div className="flex flex-col items-center text-center space-y-2.5 pt-2">
+                                <div className="w-10 h-10 rounded bg-white flex items-center justify-center p-1 border border-zinc-800">
+                                    <img src="https://paystack.com/assets/img/login/paystack-logo.png" alt="Paystack" className="w-full object-contain" onError={(e) => { e.target.style.display = "none"; }} />
+                                    <Building2 className="text-zinc-950 w-6 h-6" style={{ display: "none" }} />
+                                </div>
+                                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest max-w-xs truncate">
+                                    Rider Payout Transfer
+                                </h3>
+                                <p className="text-3xl font-black tracking-tight text-white">
+                                    ₦{selectedWithdrawal.netAmount.toLocaleString()}.00
+                                </p>
+                                <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-widest ${
+                                    selectedWithdrawal.status === "completed" || selectedWithdrawal.status === "successful"
+                                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                        : selectedWithdrawal.status === "failed"
+                                        ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                                        : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                }`}>
+                                    {selectedWithdrawal.status === "completed" || selectedWithdrawal.status === "successful" ? "Successful" : selectedWithdrawal.status}
+                                </span>
+                            </div>
+
+                            {/* Processing Progress Line */}
+                            <div className="px-4 py-2 border border-zinc-800 rounded bg-zinc-900/50 space-y-3">
+                                <div className="flex items-center justify-between text-[8px] font-black text-zinc-400 uppercase tracking-wider relative">
+                                    {/* Line connector */}
+                                    <div className="absolute left-[15%] right-[15%] top-1 h-[2px] bg-zinc-800 z-0">
+                                        <div className={`h-full bg-emerald-500 transition-all duration-500 ${
+                                            selectedWithdrawal.status === "failed" ? "w-0 bg-rose-500" : selectedWithdrawal.status === "pending" ? "w-[50%]" : "w-full"
+                                        }`} />
+                                    </div>
+                                    
+                                    <div className="flex flex-col items-center z-10 space-y-1">
+                                        <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black ${
+                                            selectedWithdrawal.status === "failed" ? "bg-rose-600 text-white" : "bg-emerald-500 text-black"
+                                        }`}>
+                                            {selectedWithdrawal.status === "failed" ? "✕" : "✓"}
+                                        </div>
+                                        <span>Initiated</span>
+                                    </div>
+
+                                    <div className="flex flex-col items-center z-10 space-y-1">
+                                        <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black ${
+                                            selectedWithdrawal.status === "failed" ? "bg-zinc-800 text-zinc-500" : selectedWithdrawal.status === "pending" ? "bg-amber-500 text-black" : "bg-emerald-500 text-black"
+                                        }`}>
+                                            ✓
+                                        </div>
+                                        <span>Processed</span>
+                                    </div>
+
+                                    <div className="flex flex-col items-center z-10 space-y-1">
+                                        <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black ${
+                                            selectedWithdrawal.status === "completed" || selectedWithdrawal.status === "successful" ? "bg-emerald-500 text-black" : "bg-zinc-800 text-zinc-500"
+                                        }`}>
+                                            ✓
+                                        </div>
+                                        <span>Settled</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Details Block */}
+                            <div className="p-3 bg-zinc-900 border border-zinc-800 rounded space-y-3.5 text-xs">
+                                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Transfer Details</h4>
+                                
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Recipient Bank Account</p>
+                                    <p className="font-extrabold text-white text-xs leading-relaxed uppercase">
+                                        {selectedWithdrawal.bankName} | {selectedWithdrawal.accountName} | {selectedWithdrawal.accountNumber}
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-between items-start gap-3">
+                                    <div>
+                                        <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Payment Reference</p>
+                                        <p className="font-black text-white text-xs select-all break-all">{selectedWithdrawal.paystackReference || "N/A"}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            if (selectedWithdrawal.paystackReference) {
+                                                navigator.clipboard.writeText(selectedWithdrawal.paystackReference);
+                                                toast.success("Copied reference!");
+                                            }
+                                        }}
+                                        className="shrink-0 p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                                    >
+                                        <Copy size={12} />
+                                    </button>
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Payment Method</span>
+                                    <span className="font-black text-white text-xs uppercase">Paystack Transfer</span>
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Initiated Date</span>
+                                    <span className="font-black text-white text-xs">
+                                        {new Date(selectedWithdrawal.initiatedAt || selectedWithdrawal.createdAt).toLocaleString(undefined, {
+                                            month: "short", day: "numeric", year: "numeric",
+                                            hour: "2-digit", minute: "2-digit", second: "2-digit"
+                                        })}
+                                    </span>
+                                </div>
+
+                                {selectedWithdrawal.status === "failed" && selectedWithdrawal.failureReason && (
+                                    <div className="border-t border-zinc-800 pt-2 space-y-1">
+                                        <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">Error Detail</p>
+                                        <p className="font-bold text-rose-400 leading-relaxed bg-rose-950/20 p-2.5 rounded">
+                                            {selectedWithdrawal.failureReason}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer Buttons */}
+                            <div className="grid grid-cols-2 gap-3 pt-2">
+                                <button
+                                    onClick={() => toast.success("Issue report opened")}
+                                    className="h-10 rounded border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                                >
+                                    Report Issue
+                                </button>
+                                <button
+                                    onClick={() => toast.success("Receipt shared successfully!")}
+                                    className="h-10 rounded bg-emerald-500 hover:bg-emerald-600 text-zinc-950 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                                >
+                                    <Share2 size={12} />
+                                    Share Receipt
+                                </button>
                             </div>
                         </motion.div>
                     </div>
