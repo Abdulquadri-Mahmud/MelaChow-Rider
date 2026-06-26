@@ -351,26 +351,26 @@ export default function RiderTransactionsPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="relative w-full max-w-md bg-zinc-950 rounded border border-zinc-800 shadow-2xl p-3 space-y-4 text-white overflow-hidden max-h-[90vh] overflow-y-auto"
+                            className="relative w-full max-w-md bg-white dark:bg-zinc-950 rounded border border-gray-200 dark:border-zinc-800 shadow-2xl p-3 space-y-4 text-gray-900 dark:text-white overflow-hidden max-h-[90vh] overflow-y-auto"
                         >
                             {/* Header Close button */}
-                            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                                <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Transaction Details</span>
-                                <button onClick={() => setSelectedTx(null)} className="text-zinc-400 hover:text-white">
+                            <div className="flex justify-between items-center border-b border-gray-200 dark:border-zinc-800 pb-2">
+                                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-zinc-400 tracking-wider">Transaction Details</span>
+                                <button onClick={() => setSelectedTx(null)} className="text-gray-400 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white">
                                     <X size={16} />
                                 </button>
                             </div>
 
                             {/* Paystack Styled Badge & Header */}
                             <div className="flex flex-col items-center text-center space-y-2.5 pt-2">
-                                <div className="w-10 h-10 rounded bg-white flex items-center justify-center p-1 border border-zinc-800">
+                                <div className="w-10 h-10 rounded bg-white flex items-center justify-center p-1 border border-gray-200 dark:border-zinc-800">
                                     <img src="https://paystack.com/assets/img/login/paystack-logo.png" alt="Paystack" className="w-full object-contain" onError={(e) => { e.target.style.display = "none"; }} />
-                                    <Building2 className="text-zinc-950 w-6 h-6" style={{ display: "none" }} />
+                                    <Building2 className="text-gray-900 dark:text-zinc-950 w-6 h-6" style={{ display: "none" }} />
                                 </div>
-                                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest max-w-xs truncate">
+                                <h3 className="text-xs font-black text-gray-500 dark:text-zinc-400 uppercase tracking-widest max-w-xs truncate">
                                     {selectedTx.type === "credit" ? "Transfer from MelaChow Platform" : "Withdrawal Transfer"}
                                 </h3>
-                                <p className="text-3xl font-black tracking-tight text-white">
+                                <p className="text-3xl font-black tracking-tight text-gray-900 dark:text-white">
                                     ₦{selectedTx.amount.toLocaleString()}.00
                                 </p>
                                 <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-widest ${
@@ -385,10 +385,10 @@ export default function RiderTransactionsPage() {
                             </div>
 
                             {/* Processing Progress Line */}
-                            <div className="px-4 py-2 border border-zinc-800 rounded bg-zinc-900/50 space-y-3">
-                                <div className="flex items-center justify-between text-[8px] font-black text-zinc-400 uppercase tracking-wider relative">
+                            <div className="px-4 py-2 border border-gray-200 dark:border-zinc-800 rounded bg-gray-50 dark:bg-zinc-900/50 space-y-3">
+                                <div className="flex items-center justify-between text-[8px] font-black text-gray-500 dark:text-zinc-400 uppercase tracking-wider relative">
                                     {/* Line connector */}
-                                    <div className="absolute left-[15%] right-[15%] top-1 h-[2px] bg-zinc-800 z-0">
+                                    <div className="absolute left-[15%] right-[15%] top-1 h-[2px] bg-gray-200 dark:bg-zinc-800 z-0">
                                         <div className={`h-full bg-emerald-500 transition-all duration-500 ${
                                             selectedTx.computedStatus === "failed" ? "w-0 bg-rose-500" : selectedTx.computedStatus === "pending" ? "w-[50%]" : "w-full"
                                         }`} />
@@ -405,7 +405,7 @@ export default function RiderTransactionsPage() {
 
                                     <div className="flex flex-col items-center z-10 space-y-1">
                                         <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black ${
-                                            selectedTx.computedStatus === "failed" ? "bg-zinc-800 text-zinc-500" : selectedTx.computedStatus === "pending" ? "bg-amber-500 text-black" : "bg-emerald-500 text-black"
+                                            selectedTx.computedStatus === "failed" ? "bg-gray-300 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500" : selectedTx.computedStatus === "pending" ? "bg-amber-500 text-black" : "bg-emerald-500 text-black"
                                         }`}>
                                             ✓
                                         </div>
@@ -414,25 +414,25 @@ export default function RiderTransactionsPage() {
 
                                     <div className="flex flex-col items-center z-10 space-y-1">
                                         <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black ${
-                                            selectedTx.computedStatus === "completed" || selectedTx.computedStatus === "successful" ? "bg-emerald-500 text-black" : "bg-zinc-800 text-zinc-500"
+                                            selectedTx.computedStatus === "completed" || selectedTx.computedStatus === "successful" ? "bg-emerald-500 text-black" : "bg-gray-300 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500"
                                         }`}>
                                             ✓
                                         </div>
                                         <span>Settled</span>
                                     </div>
                                 </div>
-                                <p className="text-[8px] text-center text-zinc-500 font-bold uppercase tracking-widest">
+                                <p className="text-[8px] text-center text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-widest">
                                     Disbursements settle instantly via instant transfers
                                 </p>
                             </div>
 
-                            {/* Details Block (Receipt layout from Image 1) */}
-                            <div className="p-3 bg-zinc-900 border border-zinc-800 rounded space-y-3.5 text-xs">
-                                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Transaction Details</h4>
+                            {/* Details Block (Receipt layout) */}
+                            <div className="p-3 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded space-y-3.5 text-xs">
+                                <h4 className="text-[10px] font-black uppercase text-gray-500 dark:text-zinc-400 tracking-wider">Transaction Details</h4>
                                 
                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Recipient Details</p>
-                                    <p className="font-extrabold text-white text-xs leading-relaxed uppercase">
+                                    <p className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Recipient Details</p>
+                                    <p className="font-extrabold text-gray-900 dark:text-white text-xs leading-relaxed uppercase">
                                         {selectedTx.withdrawal
                                             ? `${selectedTx.withdrawal.accountName} | ${selectedTx.withdrawal.bankName} | ${selectedTx.withdrawal.accountNumber}`
                                             : rider?.name || "Rider Account"}
@@ -441,25 +441,25 @@ export default function RiderTransactionsPage() {
 
                                 <div className="flex justify-between items-start gap-3">
                                     <div>
-                                        <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Transaction No.</p>
-                                        <p className="font-black text-white text-xs select-all break-all">{selectedTx.ref || selectedTx._id || "N/A"}</p>
+                                        <p className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Transaction No.</p>
+                                        <p className="font-black text-gray-900 dark:text-white text-xs select-all break-all">{selectedTx.ref || selectedTx._id || "N/A"}</p>
                                     </div>
                                     <button
                                         onClick={() => copyToClipboard(selectedTx.ref || selectedTx._id, "ref")}
-                                        className="shrink-0 p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                                        className="shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                     >
                                         <Copy size={12} />
                                     </button>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Payment Method</span>
-                                    <span className="font-black text-white text-xs uppercase">Wallet</span>
+                                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Payment Method</span>
+                                    <span className="font-black text-gray-900 dark:text-white text-xs uppercase">Wallet</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Transaction Date</span>
-                                    <span className="font-black text-white text-xs">
+                                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Transaction Date</span>
+                                    <span className="font-black text-gray-900 dark:text-white text-xs">
                                         {new Date(selectedTx.date).toLocaleString(undefined, {
                                             month: "short", day: "numeric", year: "numeric",
                                             hour: "2-digit", minute: "2-digit", second: "2-digit"
@@ -469,21 +469,21 @@ export default function RiderTransactionsPage() {
 
                                 <div className="flex justify-between items-start gap-3">
                                     <div>
-                                        <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Session ID</p>
-                                        <p className="font-black text-white text-xs select-all break-all">{selectedTx._id || "N/A"}</p>
+                                        <p className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Session ID</p>
+                                        <p className="font-black text-gray-900 dark:text-white text-xs select-all break-all">{selectedTx._id || "N/A"}</p>
                                     </div>
                                     <button
                                         onClick={() => copyToClipboard(selectedTx._id, "session")}
-                                        className="shrink-0 p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                                        className="shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                                     >
                                         <Copy size={12} />
                                     </button>
                                 </div>
 
                                 {selectedTx.computedStatus === "failed" && selectedTx.withdrawal?.failureReason && (
-                                    <div className="border-t border-zinc-800 pt-2 space-y-1">
+                                    <div className="border-t border-gray-200 dark:border-zinc-800 pt-2 space-y-1">
                                         <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">Error Detail</p>
-                                        <p className="font-bold text-rose-400 leading-relaxed bg-rose-950/20 p-2.5 rounded">
+                                        <p className="font-bold text-rose-500 dark:text-rose-400 leading-relaxed bg-rose-50 dark:bg-rose-950/20 p-2.5 rounded">
                                             {selectedTx.withdrawal.failureReason}
                                         </p>
                                     </div>
@@ -491,14 +491,14 @@ export default function RiderTransactionsPage() {
                             </div>
 
                             {/* More Actions */}
-                            <div className="p-3 bg-zinc-900 border border-zinc-800 rounded space-y-2 text-xs">
-                                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">More Actions</h4>
+                            <div className="p-3 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded space-y-2 text-xs">
+                                <h4 className="text-[10px] font-black uppercase text-gray-500 dark:text-zinc-400 tracking-wider">More Actions</h4>
                                 <button
                                     onClick={() => {
                                         setSelectedTx(null);
                                         router.push("/rider/wallet");
                                     }}
-                                    className="flex items-center gap-2 text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider py-1 hover:text-emerald-300 transition-all"
+                                    className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider py-1 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all"
                                 >
                                     <TrendingDown size={14} />
                                     Transfer Again
@@ -509,13 +509,13 @@ export default function RiderTransactionsPage() {
                             <div className="grid grid-cols-2 gap-3 pt-2">
                                 <button
                                     onClick={() => toast.success("Issue report opened")}
-                                    className="h-10 rounded border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                                    className="h-10 rounded border border-gray-200 dark:border-zinc-800 bg-gray-100 dark:bg-zinc-900 hover:bg-gray-200 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5"
                                 >
                                     Report Issue
                                 </button>
                                 <button
                                     onClick={() => toast.success("Receipt shared successfully!")}
-                                    className="h-10 rounded bg-emerald-500 hover:bg-emerald-600 text-zinc-950 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                                    className="h-10 rounded bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20"
                                 >
                                     <Share2 size={12} />
                                     Share Receipt
