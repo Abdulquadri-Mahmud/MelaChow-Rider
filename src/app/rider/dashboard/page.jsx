@@ -276,6 +276,32 @@ export default function RiderDashboard() {
     return (
         <div className="space-y-6 composite-stable">
 
+            {/* ── Suspension Banner (prompt §7) ── */}
+            {rider?.isSuspended && new Date(rider?.suspendedUntil) > new Date() && (
+                <div className="bg-red-50 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 rounded p-3">
+                    <p className="font-black text-sm text-red-800 dark:text-red-400 uppercase tracking-tight">Account Suspended</p>
+                    <p className="text-xs text-red-700 dark:text-red-300 mt-1 font-bold">
+                        Your account is suspended until{" "}
+                        {new Date(rider.suspendedUntil).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}.
+                    </p>
+                    <p className="text-[10px] text-red-500 mt-1 font-bold">
+                        Reason: order terminated after food was already collected. Contact support if you believe this is an error.
+                    </p>
+                </div>
+            )}
+
+            {/* ── Strike Warning (prompt §7) — shown when ≥1 strike but not yet suspended ── */}
+            {(rider?.terminationStrikes ?? 0) >= 1 && !rider?.isSuspended && (
+                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-400 dark:border-amber-500/40 rounded p-2">
+                    <p className="text-sm font-black text-amber-800 dark:text-amber-300">
+                        ⚠️ Strike Warning: {rider.terminationStrikes} of 2
+                    </p>
+                    <p className="text-sm text-amber-700 dark:text-amber-400 mt-1 font-bold">
+                        A second termination after food pickup will suspend your account for 48 hours.
+                    </p>
+                </div>
+            )}
+
             {/* Greeting */}
             <div className="flex justify-between items-start">
                 <div>
@@ -429,38 +455,36 @@ export default function RiderDashboard() {
                                             </div>
                                             <div className="text-right shrink-0">
                                                 <div className="text-base font-black text-gray-900 dark:text-white">
-                                                    ₦{Number(offer.deliveryFee || 600).toLocaleString()}
+                                                    {offer.deliveryFee != null ? `₦${Number(offer.deliveryFee).toLocaleString()}` : "₦—"}
                                                 </div>
                                                 <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
                                             </div>
                                         </div>
 
-                                        {/* ── Previous Rider Warning Banner ── */}
-                                        {offer.hasPreviousRider && (
-                                            <div className={`mt-3 p-2.5 rounded-lg flex items-start gap-2 border ${
-                                                offer.previousRider?.foodPickedUp
-                                                    ? "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30"
-                                                    : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30"
-                                            }`}>
-                                                <AlertTriangle size={13} className={`shrink-0 mt-0.5 ${
-                                                    offer.previousRider?.foodPickedUp ? "text-red-600" : "text-amber-600"
-                                                }`} />
-                                                <div className="min-w-0 flex-1">
-                                                    <p className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1 ${
-                                                        offer.previousRider?.foodPickedUp ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"
-                                                    }`}>
-                                                        ⚠️ Previously Assigned
+                                        {/* ── Previous Rider Warning Banner (prompt §3) ── */}
+                                        {offer.hasPreviousRider && offer.previousRider && (
+                                            <div className="mt-3 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-r">
+                                                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                                                    ⚠️ Previously assigned to {offer.previousRider.name}
+                                                </p>
+                                                <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                                                    📞{" "}
+                                                    <a
+                                                        href={`tel:${offer.previousRider.phone}`}
+                                                        className="underline font-medium ml-1"
+                                                    >
+                                                        {offer.previousRider.phone}
+                                                    </a>
+                                                </p>
+                                                {offer.previousRider.foodPickedUp ? (
+                                                    <p className="text-sm text-red-700 dark:text-red-400 font-semibold mt-2">
+                                                        🍔 Food already collected — call the previous rider to receive the food before heading to the customer.
                                                     </p>
-                                                    {offer.previousRider?.foodPickedUp ? (
-                                                        <p className="text-[9px] font-bold text-red-600/90 dark:text-red-300/90 leading-relaxed">
-                                                            Food collected by {offer.previousRider?.name || "previous rider"} ({offer.previousRider?.phone || "no phone"}). You must retrieve it from them before delivering.
-                                                        </p>
-                                                    ) : (
-                                                        <p className="text-[9px] font-bold text-amber-600/90 dark:text-amber-300/90 leading-relaxed">
-                                                            Previous rider {offer.previousRider?.name || ""} was unable to deliver. Food is still at the restaurant — pick up as normal.
-                                                        </p>
-                                                    )}
-                                                </div>
+                                                ) : (
+                                                    <p className="text-sm text-green-700 dark:text-green-400 mt-2">
+                                                        ✅ Food is still at the restaurant — pick up as normal.
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
 

@@ -34,7 +34,16 @@ import {
 import toast from "react-hot-toast";
 
 const RIDER_PAYOUT_THRESHOLD = 1500;
-const RIDER_PAYOUT_TIME_LABEL = "7:30 PM";
+// Updated to match backend sweep schedule (9:30 PM WAT daily)
+const RIDER_PAYOUT_TIME_LABEL = "9:30 PM";
+
+// Human-readable transaction type labels (prompt §7)
+const TRANSACTION_LABELS = {
+    rider_payout:    "Delivery earnings",
+    delivery_spread: "Platform fee",
+    withdrawal:      "Bank transfer",
+    adjustment:      "Manual adjustment",
+};
 
 // ── Payout Sheet ──────────────────────────────────────────────────────────────
 // ── Payout Details Modal ───────────────────────────────────────────────────
@@ -169,6 +178,10 @@ export default function RiderWalletPage() {
     };
 
     const handleWithdraw = async () => {
+        if (!riderId) {
+            toast.error("Rider session not found. Please log in again.");
+            return;
+        }
         const amount = Number(withdrawAmount);
         if (!amount || amount < RIDER_PAYOUT_THRESHOLD) {
             toast.error(`Minimum withdrawal is ₦${RIDER_PAYOUT_THRESHOLD.toLocaleString()}`);
@@ -185,8 +198,19 @@ export default function RiderWalletPage() {
             setWithdrawModalOpen(false);
             await fetchWallet(true);
         } catch (err) {
-            const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Withdrawal failed. Please try again.";
+            // Surface the exact backend message, falling back gracefully
+            const errMsg =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                (err?.response?.status === 404 ? "Withdrawal endpoint not found. Please contact support." : null) ||
+                err?.message ||
+                "Withdrawal failed. Please try again.";
             toast.error(errMsg);
+            console.error("[Withdrawal error]", {
+                status: err?.response?.status,
+                data: err?.response?.data,
+                url: err?.config?.url,
+            });
         } finally {
             setWithdrawing(false);
         }
@@ -250,6 +274,18 @@ export default function RiderWalletPage() {
                     balance={balance}
                     bankAccount={bankAccount}
                 />
+
+                {/* Daily Payout Info Banner (prompt §7) */}
+                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded p-2">
+                    <p className="text-sm font-black text-blue-800 dark:text-blue-300">💸 Daily Payout</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1 font-bold">
+                        Your earnings are sent to your bank every day at 9:30 PM.
+                        Deliveries completed after 9:30 PM pay out the following evening.
+                    </p>
+                    <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                        Bank credits may take 1 extra day on public holidays.
+                    </p>
+                </div>
 
                 {/* Manual Withdraw Button */}
                 {bankAccount ? (
@@ -332,7 +368,7 @@ export default function RiderWalletPage() {
                                                 </div>
                                                 <div>
                                                     <p className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors uppercase tracking-tight">
-                                                        {tx.description || (tx.type === "credit" ? "Order Earning" : "Wallet Withdrawal")}
+                                                        {TRANSACTION_LABELS[tx.transactionType] ?? tx.description ?? (tx.type === "credit" ? "Order Earning" : "Wallet Withdrawal")}
                                                     </p>
                                                     <p className="text-[10px] text-gray-500 font-bold mt-0.5 flex items-center gap-1 uppercase tracking-widest">
                                                         <Calendar size={9} />

@@ -141,7 +141,7 @@ export default function AvailableDeliveriesPage() {
                                         </div>
                                         <div className="text-right shrink-0">
                                             <div className="text-base font-black text-zinc-950 dark:text-white">
-                                                ₦{Number(offer.deliveryFee || 600).toLocaleString()}
+                                                {offer.deliveryFee != null ? `₦${Number(offer.deliveryFee).toLocaleString()}` : "₦—"}
                                             </div>
                                             <div className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-0.5">Payout</div>
                                         </div>
