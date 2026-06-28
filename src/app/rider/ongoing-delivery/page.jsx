@@ -312,6 +312,14 @@ export default function OngoingDeliveryPage() {
 
     const riderId = rider?._id || rider?.id;
 
+    // ── Delivery countdown — MUST be before any early returns (Rules of Hooks) ─
+    // acceptedAt may be null until activeOrder loads; the hook handles null gracefully.
+    const acceptedAt = activeOrder?.riderAssignment?.assignedAt
+        || activeOrder?.riderAssignment?.acceptedAt
+        || activeOrder?.acceptedAt
+        || null;
+    const countdown = useDeliveryCountdown(acceptedAt);
+
     // Persist OTP state
     useEffect(() => {
         if (otpState.step === "awaiting_otp") {
@@ -553,13 +561,7 @@ export default function OngoingDeliveryPage() {
     // Report Undeliverable: ONLY visible when hasPreviousRider is true (prompt §5)
     const canReportUndeliverable = !!activeOrder.hasPreviousRider && !isDisputed;
 
-    // ── Delivery countdown (prompt §8) — from acceptedAt ──────────────────────
-    const acceptedAt = activeOrder?.riderAssignment?.assignedAt
-        || activeOrder?.riderAssignment?.acceptedAt
-        || activeOrder?.acceptedAt;
-
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const countdown = useDeliveryCountdown(acceptedAt);
+    // (countdown already derived at top of component)
 
     // Human-readable countdown label
     const countdownStr =
