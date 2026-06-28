@@ -33,7 +33,7 @@ import {
 } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 
-const RIDER_PAYOUT_THRESHOLD = 1500;
+const RIDER_PAYOUT_THRESHOLD = 0;
 // Updated to match backend sweep schedule (9:30 PM WAT daily)
 const RIDER_PAYOUT_TIME_LABEL = "9:30 PM";
 
@@ -50,9 +50,9 @@ const TRANSACTION_LABELS = {
 function PayoutScheduleInfo({ balance, bankAccount }) {
     const now = new Date();
     const payoutToday = new Date();
-    payoutToday.setHours(19, 30, 0, 0);
+    // Rider sweep: 9:30 PM WAT (UTC+1) = 21:30 local Lagos time
+    payoutToday.setHours(21, 30, 0, 0);
     const scheduledDay = now > payoutToday ? "Tomorrow" : "Today";
-    const isEligible = balance >= RIDER_PAYOUT_THRESHOLD;
 
     return (
         <div className="bg-blue-500/5 border border-blue-500/10 rounded p-3 space-y-3">
@@ -69,7 +69,7 @@ function PayoutScheduleInfo({ balance, bankAccount }) {
                 <div>
                     <p className="text-[9px] font-black text-blue-500/60 uppercase tracking-widest">Amount</p>
                     <p className="text-xs font-black text-gray-900 dark:text-white">
-                        {isEligible ? `₦${balance.toLocaleString()}` : `Minimum ₦${RIDER_PAYOUT_THRESHOLD.toLocaleString()}`}
+                        ₦{balance.toLocaleString()}
                     </p>
                 </div>
             </div>
@@ -183,8 +183,8 @@ export default function RiderWalletPage() {
             return;
         }
         const amount = Number(withdrawAmount);
-        if (!amount || amount < RIDER_PAYOUT_THRESHOLD) {
-            toast.error(`Minimum withdrawal is ₦${RIDER_PAYOUT_THRESHOLD.toLocaleString()}`);
+        if (!amount || amount <= 0) {
+            toast.error("Withdrawal amount must be greater than ₦0");
             return;
         }
         if (amount > balance) {
@@ -275,17 +275,57 @@ export default function RiderWalletPage() {
                     bankAccount={bankAccount}
                 />
 
-                {/* Daily Payout Info Banner (prompt §7) */}
-                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded p-2">
-                    <p className="text-sm font-black text-blue-800 dark:text-blue-300">💸 Daily Payout</p>
-                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1 font-bold">
-                        Your earnings are sent to your bank every day at 9:30 PM.
-                        Deliveries completed after 9:30 PM pay out the following evening.
-                    </p>
-                    <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
-                        Bank credits may take 1 extra day on public holidays.
-                    </p>
-                </div>
+                {/* ── Suspension Banner (prompt §7) ── */}
+                {rider?.isSuspended && new Date(rider?.suspendedUntil) > new Date() && (
+                    <div className="bg-red-50 dark:bg-red-500/10 border border-red-300
+                                    dark:border-red-500/30 rounded-xl p-4 mb-3">
+                        <p className="font-black text-red-800 dark:text-red-400 uppercase tracking-tight text-sm">
+                            Account Suspended
+                        </p>
+                        <p className="text-sm text-red-700 dark:text-red-400/80 mt-1">
+                            Your account is suspended until{" "}
+                            {new Date(rider.suspendedUntil).toLocaleString("en-NG", {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                            })}.
+                        </p>
+                        <p className="text-xs text-red-500 mt-1.5">
+                            Reason: order terminated after food was already collected.
+                            Contact support if you believe this is an error.
+                        </p>
+                    </div>
+                )}
+
+                {/* ── Strike Warning (renders if 1+ strikes, not yet suspended) ── */}
+                {(rider?.terminationStrikes ?? 0) >= 1 && !rider?.isSuspended && (
+                    <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-400
+                                    dark:border-amber-500/30 rounded-xl p-3 mb-3">
+                        <p className="text-sm font-semibold text-amber-800 dark:text-amber-400">
+                            ⚠️ Strike Warning: {rider.terminationStrikes} of 2
+                        </p>
+                        <p className="text-sm text-amber-700 dark:text-amber-400/80 mt-1">
+                            A second termination after food pickup will suspend your
+                            account for 48 hours.
+                        </p>
+                    </div>
+                )}
+
+                {/* ── Daily Payout Info Banner (always visible when not suspended) ── */}
+                {!rider?.isSuspended && (
+                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200
+                                    dark:border-blue-500/20 rounded-xl p-3 mb-4">
+                        <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                            💸 Daily Payout
+                        </p>
+                        <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                            Your earnings are sent to your bank every day at 9:30 PM.
+                        </p>
+                        <p className="text-xs text-blue-500 dark:text-blue-400/70 mt-1">
+                            Deliveries completed after 9:30 PM pay out the following evening.
+                            Bank credits may take 1 extra day on public holidays.
+                        </p>
+                    </div>
+                )}
 
                 {/* Manual Withdraw Button */}
                 {bankAccount ? (
@@ -294,12 +334,12 @@ export default function RiderWalletPage() {
                             setWithdrawAmount("");
                             setWithdrawModalOpen(true);
                         }}
-                        disabled={balance < RIDER_PAYOUT_THRESHOLD}
+                        disabled={balance <= 0}
                         className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black py-3 rounded flex items-center justify-center gap-2 text-sm transition-all active:scale-95 shadow-md shadow-orange-600/20"
                     >
                         <Send size={17} />
-                        {balance < RIDER_PAYOUT_THRESHOLD
-                            ? `Min. balance ₦${RIDER_PAYOUT_THRESHOLD.toLocaleString()} to withdraw`
+                        {balance <= 0
+                            ? `No balance available to withdraw`
                             : "Withdraw Earnings"}
                     </button>
                 ) : (
@@ -472,7 +512,7 @@ export default function RiderWalletPage() {
                         <h4 className="font-black text-xs uppercase tracking-widest">Wallet Policy</h4>
                     </div>
                     <p className="text-gray-500 text-xs font-medium leading-relaxed">
-                        Earnings credit instantly after delivery. Payouts are made automatically every day at {RIDER_PAYOUT_TIME_LABEL} (minimum balance of ₦{RIDER_PAYOUT_THRESHOLD.toLocaleString()}).
+                        Earnings credit instantly after delivery. Payouts are made automatically every day at {RIDER_PAYOUT_TIME_LABEL} (no minimum balance required).
                     </p>
                 </div>
             </div>
@@ -531,7 +571,7 @@ export default function RiderWalletPage() {
                                             inputMode="numeric"
                                             value={withdrawAmount}
                                             onChange={e => setWithdrawAmount(e.target.value)}
-                                            placeholder={`Min. ${RIDER_PAYOUT_THRESHOLD.toLocaleString()}`}
+                                            placeholder="Enter amount"
                                             className="w-full h-12 pl-8 pr-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded text-sm font-black text-zinc-900 dark:text-white outline-none focus:border-orange-500 dark:focus:border-orange-500 placeholder:text-zinc-300 placeholder:font-normal"
                                         />
                                     </div>
