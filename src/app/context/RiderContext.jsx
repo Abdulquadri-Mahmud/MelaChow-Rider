@@ -156,9 +156,13 @@ export const RiderProvider = ({ children }) => {
             }
         };
 
-        fetchCount();
-        const interval = setInterval(fetchCount, 60000); // 60s for unread count is plenty
-        return () => clearInterval(interval);
+        // History is loaded on startup; wait before using the REST fallback.
+        const initialTimeout = setTimeout(fetchCount, 30000);
+        const interval = setInterval(fetchCount, 300000);
+        return () => {
+            clearTimeout(initialTimeout);
+            clearInterval(interval);
+        };
     }, [riderId, wsConnected]);
 
     useEffect(() => {

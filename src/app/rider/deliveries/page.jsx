@@ -7,10 +7,12 @@ import { ArrowLeft, Package, MapPin, Loader2, Bike, RefreshCcw } from "lucide-re
 import { useRider } from "@/app/context/RiderContext";
 import { getPendingOffers, acceptOffer } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
+import { useSocket } from "@/app/context/SocketContext";
 
 export default function AvailableDeliveriesPage() {
     const router = useRouter();
     const { rider, isOnline, refreshProfile } = useRider();
+    const { isConnected: wsConnected } = useSocket();
     const [pendingOffers, setPendingOffers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -39,10 +41,24 @@ export default function AvailableDeliveriesPage() {
 
     useEffect(() => {
         fetchOffers();
-        // Poll every 10 seconds to keep list updated
-        const interval = setInterval(() => fetchOffers(), 10000);
-        return () => clearInterval(interval);
-    }, [riderId, isOnline]);
+
+        if (!isOnline) return;
+
+        const handleOfferChanged = () => fetchOffers();
+        window.addEventListener("rider:new_assignment", handleOfferChanged);
+        window.addEventListener("rider:assignment_cancelled", handleOfferChanged);
+
+        // Reconciliation fallback only. Socket events normally update this page.
+        const interval = !wsConnected
+            ? setInterval(handleOfferChanged, 120000)
+            : null;
+
+        return () => {
+            if (interval) clearInterval(interval);
+            window.removeEventListener("rider:new_assignment", handleOfferChanged);
+            window.removeEventListener("rider:assignment_cancelled", handleOfferChanged);
+        };
+    }, [riderId, isOnline, wsConnected]);
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-24 text-zinc-900 dark:text-zinc-100">

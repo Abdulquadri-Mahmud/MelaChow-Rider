@@ -19,6 +19,7 @@ import {
 } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
+import { useSocket } from "@/app/context/SocketContext";
 import { useDeliveryCountdown } from "@/app/hooks/useDeliveryCountdown";
 
 // ── Termination reasons (prompt §4 — select input) ───────────────────────────
@@ -278,6 +279,7 @@ function UndeliverableModal({ isOpen, onClose, onConfirm, isLoading, previousRid
 export default function OngoingDeliveryPage() {
     const router = useRouter();
     const { rider, refreshProfile } = useRider();
+    const { isConnected: wsConnected } = useSocket();
     const [activeOrder, setActiveOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isPickingUp, setIsPickingUp] = useState(false);
@@ -351,9 +353,16 @@ export default function OngoingDeliveryPage() {
 
     useEffect(() => {
         fetchActiveOrder();
-        const interval = setInterval(fetchActiveOrder, 8000);
-        return () => clearInterval(interval);
-    }, [fetchActiveOrder]);
+
+        // Reconcile only when the realtime connection is unavailable.
+        const interval = !wsConnected
+            ? setInterval(fetchActiveOrder, 60000)
+            : null;
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [fetchActiveOrder, wsConnected]);
 
     // Safety: clear stale OTP state if no active order
     useEffect(() => {
