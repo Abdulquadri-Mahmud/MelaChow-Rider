@@ -143,9 +143,16 @@ export default function GetHelp() {
           <ContactMethod
             icon={Mail}
             name="Email Support"
-            description="We'll respond within 24 hours"
-            url="mailto:abdulquadrimahmud@gmail.com"
+            description="support@melachow.com"
+            url="mailto:support@melachow.com"
             colorClass="bg-orange-50 dark:bg-orange-500/10 text-orange-500"
+          />
+          <ContactMethod
+            icon={Mail}
+            name="Email Help Desk"
+            description="help@melachow.com"
+            url="mailto:help@melachow.com"
+            colorClass="bg-zinc-50 dark:bg-zinc-800 text-zinc-500"
           />
           <ContactMethod
             icon={Twitter}
