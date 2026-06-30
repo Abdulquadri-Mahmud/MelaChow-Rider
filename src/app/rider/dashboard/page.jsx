@@ -13,10 +13,12 @@ import { useRider } from "@/app/context/RiderContext";
 import { getActiveRiderOrder, getPendingOffers, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery, acceptOffer, toggleRiderAvailability } from "@/app/lib/riderApi";
 import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
+import { useSocket } from "@/app/context/SocketContext";
 
 export default function RiderDashboard() {
     const router = useRouter();
     const { rider, isOnline, refreshProfile } = useRider();
+    const { isConnected: wsConnected } = useSocket();
     const [activeOrder, setActiveOrder] = useState(null);
     const [pendingOffers, setPendingOffers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -95,8 +97,12 @@ export default function RiderDashboard() {
             }
         },
         enabled: !!riderId,
-        refetchInterval: 10000, // Background refresh every 10 seconds!
-        refetchOnWindowFocus: true, // Refresh on tab focus!
+        // Socket events are the primary delivery channel. Only reconcile while
+        // the rider is online and realtime is unavailable.
+        refetchInterval: isOnline && !wsConnected ? 120000 : false,
+        refetchIntervalInBackground: false,
+        refetchOnWindowFocus: isOnline,
+        refetchOnReconnect: true,
     });
 
     useEffect(() => {
@@ -141,8 +147,6 @@ export default function RiderDashboard() {
             setLoading(false);
             return;
         }
-
-        fetchDashboardData();
 
         const handleNewAssignment = () => {
             setLocalAssignmentStatus(null);

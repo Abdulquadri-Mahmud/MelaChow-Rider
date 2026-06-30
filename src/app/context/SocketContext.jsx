@@ -30,6 +30,7 @@ export const SocketProvider = ({ children }) => {
     const listenersRegistered = useRef(false);
     const recentAssignmentIds = useRef(new Set());
     const authFailed = useRef(false);
+    const lastUnreadFetchAt = useRef(0);
 
     // Determine role based on path
     const getRoleFromPath = (path) => {
@@ -85,8 +86,11 @@ export const SocketProvider = ({ children }) => {
 
             socketService.connect(token);
 
-            // Fetch initial unread count
-            await fetchUnreadCount();
+            // Avoid turning socket outages into notification API polling storms.
+            if (Date.now() - lastUnreadFetchAt.current >= 300000) {
+                await fetchUnreadCount();
+                lastUnreadFetchAt.current = Date.now();
+            }
 
             // Only register listeners once — prevent stacking on reconnect attempts
             if (listenersRegistered.current) {
