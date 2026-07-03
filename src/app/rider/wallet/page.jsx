@@ -304,8 +304,7 @@ export default function RiderWalletPage() {
                             ⚠️ Strike Warning: {rider.terminationStrikes} of 2
                         </p>
                         <p className="text-sm text-amber-700 dark:text-amber-400/80 mt-1">
-                            A second termination after food pickup will suspend your
-                            account for 48 hours.
+                            A second termination after food pickup will suspend your account for the platform-configured penalty period.
                         </p>
                     </div>
                 )}

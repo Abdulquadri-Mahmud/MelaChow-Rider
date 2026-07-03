@@ -61,7 +61,10 @@ export const RiderProvider = ({ children }) => {
             setRider(riderData);
 
             // ✅ FIX: Check all active statuses, not just 'available'
-            setIsOnline(ACTIVE_STATUSES.includes(riderData?.status));
+            const suspensionIsActive = riderData?.isSuspended &&
+                riderData?.suspendedUntil &&
+                new Date(riderData.suspendedUntil).getTime() > Date.now();
+            setIsOnline(ACTIVE_STATUSES.includes(riderData?.status) && !suspensionIsActive);
 
             if (includeNotifications) {
                 const now = Date.now();
@@ -257,6 +260,14 @@ export const RiderProvider = ({ children }) => {
             return;
         }
 
+        const suspensionIsActive = rider?.isSuspended &&
+            rider?.suspendedUntil &&
+            new Date(rider.suspendedUntil).getTime() > Date.now();
+
+        if (!isOnline && suspensionIsActive) {
+            toast.error(`Your account is suspended until ${new Date(rider.suspendedUntil).toLocaleString()}. You cannot go online during this penalty.`);
+            return;
+        }
         const newStatus = isOnline ? 'offline' : 'available';
         setIsToggling(true);
         try {
