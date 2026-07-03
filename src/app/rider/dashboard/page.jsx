@@ -117,10 +117,17 @@ export default function RiderDashboard() {
     }, [queryData]);
 
     useEffect(() => {
-        if (activeOrder && !loading) {
-            router.push("/rider/ongoing-delivery");
+        const riderHasActiveAssignment = Boolean(
+            rider?.currentOrderId ||
+            rider?.status === "pending_assignment" ||
+            rider?.status === "on_delivery" ||
+            localAssignmentStatus === "accepted"
+        );
+
+        if (activeOrder && riderHasActiveAssignment && !loading) {
+            router.replace("/rider/ongoing-delivery");
         }
-    }, [activeOrder, loading]);
+    }, [activeOrder, loading, localAssignmentStatus, rider?.currentOrderId, rider?.status, router]);
 
     const fetchDashboardData = async () => {
         refetchDashboardQuery();
@@ -301,7 +308,7 @@ export default function RiderDashboard() {
                         ⚠️ Strike Warning: {rider.terminationStrikes} of 2
                     </p>
                     <p className="text-sm text-amber-700 dark:text-amber-400 mt-1 font-bold">
-                        A second termination after food pickup will suspend your account for 48 hours.
+                        A second termination after food pickup will suspend your account for the platform-configured penalty period.
                     </p>
                 </div>
             )}

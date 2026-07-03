@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Bike, MapPin, Package, CheckCircle2, AlertCircle,
@@ -278,6 +279,7 @@ function UndeliverableModal({ isOpen, onClose, onConfirm, isLoading, previousRid
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function OngoingDeliveryPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const { rider, refreshProfile } = useRider();
     const { isConnected: wsConnected } = useSocket();
     const [activeOrder, setActiveOrder] = useState(null);
@@ -311,8 +313,25 @@ export default function OngoingDeliveryPage() {
     // useRef guards — never useState — for mutation protection (prompt §1)
     const terminateGuardRef = useRef(false);
     const undeliverableGuardRef = useRef(false);
+    const redirectingRef = useRef(false);
 
     const riderId = rider?._id || rider?.id;
+
+    const clearCachedActiveOrder = useCallback(() => {
+        if (!riderId) return;
+        queryClient.setQueriesData(
+            { queryKey: ["riderDashboardData", riderId] },
+            (cached) => cached ? { ...cached, activeOrder: null } : cached
+        );
+    }, [queryClient, riderId]);
+
+    const redirectToDashboard = useCallback(() => {
+        redirectingRef.current = true;
+        setLoading(true);
+        setActiveOrder(null);
+        clearCachedActiveOrder();
+        router.replace("/rider/dashboard");
+    }, [clearCachedActiveOrder, router]);
 
     // ── Delivery countdown — MUST be before any early returns (Rules of Hooks) ─
     // acceptedAt may be null until activeOrder loads; the hook handles null gracefully.
@@ -338,18 +357,18 @@ export default function OngoingDeliveryPage() {
             const order = data?.data?.order || data?.order || (data?._id ? data : null);
             setActiveOrder(order);
             if (!order) {
-                router.replace("/rider/dashboard");
+                redirectToDashboard();
             }
         } catch (error) {
             if (error?.response?.status === 404) {
-                router.replace("/rider/dashboard");
+                redirectToDashboard();
             } else {
                 console.error("Failed to fetch active order:", error);
             }
         } finally {
-            setLoading(false);
+            if (!redirectingRef.current) setLoading(false);
         }
-    }, [riderId, router]);
+    }, [redirectToDashboard, riderId]);
 
     useEffect(() => {
         fetchActiveOrder();
@@ -391,7 +410,7 @@ export default function OngoingDeliveryPage() {
             ) {
                 fetchActiveOrder();
                 toast("Your delivery timed out. You have been unassigned.", { duration: 5000 });
-                router.push("/rider/dashboard");
+                redirectToDashboard();
             }
         });
 
@@ -465,8 +484,8 @@ export default function OngoingDeliveryPage() {
             await riderConfirmDelivery(riderId, activeOrder._id, otpState.otp.trim());
             toast.success("Order delivered! Well done. 🎉");
             setOtpState({ step: "idle", otp: "", sending: false, confirming: false, method: "", message: "" });
+            redirectToDashboard();
             await refreshProfile();
-            router.replace("/rider/dashboard");
         } catch (error) {
             setOtpState((prev) => ({ ...prev, confirming: false }));
             toast.error(error?.response?.data?.message || "Incorrect OTP. Ask the customer to check again.");
@@ -496,8 +515,8 @@ export default function OngoingDeliveryPage() {
             } else {
                 toast.success("Order terminated. A new rider will be assigned.", { duration: 4000 });
             }
+            redirectToDashboard();
             await refreshProfile();
-            router.replace("/rider/dashboard");
         } catch (err) {
             terminateGuardRef.current = false;
             setTerminateLoading(false);
