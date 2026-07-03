@@ -161,7 +161,7 @@ export default function RiderSettingsPage() {
                 className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 shadow-sm dark:shadow-none rounded-3xl overflow-hidden"
             >
                 <div className="px-4 pt-4 pb-2">
-                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Account & Security</p>
+                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Account &amp; Security</p>
                 </div>
                 <SettingRow icon={User} label="Personal Info" value={rider?.name} onClick={openEdit} />
                 <SettingRow icon={Phone} label="Phone Number" value={rider?.phone} onClick={openEdit} />
@@ -183,8 +183,8 @@ export default function RiderSettingsPage() {
                 <div className="p-4">
                     <NotificationSettings role="rider" mode="rider" />
                 </div>
-                {/* Theme Toggle */}
-                <div className="flex items-center gap-4 p-4 rounded-2xl">
+                {/* Theme Toggle — disabled */}
+                {/* <div className="flex items-center gap-4 p-4 rounded-2xl">
                     <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center shrink-0">
                         <Moon size={18} className="text-gray-500 dark:text-gray-400" />
                     </div>
@@ -198,7 +198,7 @@ export default function RiderSettingsPage() {
                     >
                         <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${theme === 'dark' ? "left-7" : "left-1"}`} />
                     </button>
-                </div>
+                </div> */}
                 <SettingRow icon={Bike} label="Availability" value={isOnline ? "Currently Online" : "Currently Offline"} onClick={toggleAvailability} badge={isOnline ? "LIVE" : undefined} />
             </motion.div>
 
@@ -210,7 +210,7 @@ export default function RiderSettingsPage() {
                 className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 shadow-sm dark:shadow-none rounded-3xl overflow-hidden"
             >
                 <div className="px-4 pt-4 pb-2">
-                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Help & Support</p>
+                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Help &amp; Support</p>
                 </div>
                 <SettingRow icon={HelpCircle} label="FAQs" onClick={() => toast("Coming soon", { icon: "🚧" })} />
                 <SettingRow icon={MessageCircle} label="Chat with Support" onClick={() => toast("Coming soon", { icon: "🚧" })} />
@@ -342,4 +342,3 @@ export default function RiderSettingsPage() {
         </div>
     );
 }
-
