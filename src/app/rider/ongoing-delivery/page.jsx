@@ -708,7 +708,14 @@ export default function OngoingDeliveryPage() {
                                     {activeOrder.restaurantName || "Partner Merchant"}
                                 </h4>
                                 <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold truncate mt-0.5">
-                                    {activeOrder.restaurantAddress || "Restaurant Location"}
+                                    {activeOrder.restaurantAddress ||
+                                        activeOrder.restaurantId?.fullAddress ||
+                                        (activeOrder.restaurantId?.address
+                                            ? (typeof activeOrder.restaurantId.address === "string"
+                                                ? activeOrder.restaurantId.address
+                                                : `${activeOrder.restaurantId.address.street || activeOrder.restaurantId.address.addressLine || ''}, ${activeOrder.restaurantId.address.city || ''}`.replace(/^[ ,]+|[ ,]+$/g, ''))
+                                            : '') ||
+                                        "Restaurant Location"}
                                 </p>
                             </div>
                         </div>

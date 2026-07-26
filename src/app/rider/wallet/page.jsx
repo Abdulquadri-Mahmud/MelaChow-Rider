@@ -34,8 +34,8 @@ import {
 import toast from "react-hot-toast";
 
 const RIDER_PAYOUT_THRESHOLD = 0;
-// Updated to match backend sweep schedule (9:30 PM WAT daily)
-const RIDER_PAYOUT_TIME_LABEL = "9:30 PM";
+// T+1 settlement: backend sweeps at 7:30 AM WAT (06:30 UTC) the morning after Paystack settles
+const RIDER_PAYOUT_TIME_LABEL = "7:30 AM";
 
 // Human-readable transaction type labels (prompt §7)
 const TRANSACTION_LABELS = {
@@ -50,8 +50,8 @@ const TRANSACTION_LABELS = {
 function PayoutScheduleInfo({ balance, bankAccount }) {
     const now = new Date();
     const payoutToday = new Date();
-    // Rider sweep: 9:30 PM WAT (UTC+1) = 21:30 local Lagos time
-    payoutToday.setHours(21, 30, 0, 0);
+    // Rider sweep: 7:30 AM WAT (UTC+1) = 06:30 UTC — T+1 morning settlement window
+    payoutToday.setHours(7, 30, 0, 0);
     const scheduledDay = now > payoutToday ? "Tomorrow" : "Today";
 
     return (
@@ -317,10 +317,10 @@ export default function RiderWalletPage() {
                             💸 Daily Payout
                         </p>
                         <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                            Your earnings are sent to your bank every day at 9:30 PM.
+                            Your earnings are automatically paid out every morning at 7:30 AM.
                         </p>
                         <p className="text-xs text-blue-500 dark:text-blue-400/70 mt-1">
-                            Deliveries completed after 9:30 PM pay out the following evening.
+                            Earnings from orders completed today are paid out tomorrow morning at 7:30 AM, after your payment provider settles funds overnight.
                             Bank credits may take 1 extra day on public holidays.
                         </p>
                     </div>
@@ -511,7 +511,7 @@ export default function RiderWalletPage() {
                         <h4 className="font-black text-xs uppercase tracking-widest">Wallet Policy</h4>
                     </div>
                     <p className="text-gray-500 text-xs font-medium leading-relaxed">
-                        Earnings credit instantly after delivery. Payouts are made automatically every day at {RIDER_PAYOUT_TIME_LABEL} (no minimum balance required).
+                        Earnings credit instantly after delivery. Payouts are processed automatically every morning at {RIDER_PAYOUT_TIME_LABEL} — funds from today's orders settle overnight and arrive tomorrow morning.
                     </p>
                 </div>
             </div>
