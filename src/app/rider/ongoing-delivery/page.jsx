@@ -750,11 +750,13 @@ export default function OngoingDeliveryPage() {
                                     const quantity = Number(item.quantity) || 1;
                                     const options = item.selected_options || [];
                                     const portionLabel = item.portion_label || item.portion || "";
-                                    let portionText = portionLabel || (quantity > 1 ? "portions" : "portion");
-                                    let fullSentence = `Deliver ${quantity} ${portionText} of ${itemName}`;
+                                    let fullSentence = `Deliver ${quantity} × ${itemName}${portionLabel ? ` — ${portionLabel}` : ""}`;
                                     if (options.length > 0) {
-                                        const optList = options.map((opt) => `${Number(opt.quantity) > 0 ? (Number(opt.quantity) * quantity) + "x " : ""}${opt.label || opt.name}`);
-                                        fullSentence += `, with ${optList.length === 1 ? optList[0] : optList.length === 2 ? optList.join(" and ") : optList.slice(0, -1).join(", ") + ", and " + optList.slice(-1)}`;
+                                        const optList = options.map((opt) => {
+                                            const group = opt.group_name || opt.groupName || "Option";
+                                            return `${group}: ${Number(opt.quantity) || 1} × ${opt.label || opt.name}`;
+                                        });
+                                        fullSentence += `. Each order includes ${optList.length === 1 ? optList[0] : optList.length === 2 ? optList.join(" and ") : optList.slice(0, -1).join(", ") + ", and " + optList.slice(-1)}`;
                                     }
                                     fullSentence += ".";
                                     return (
