@@ -287,7 +287,7 @@ export default function RiderDashboard() {
 
     if (loading) {
         return (
-            <div className="space-y-6 animate-pulse">
+            <div className="space-y-4 animate-pulse">
                 {/* Greeting Skeleton */}
                 <div className="flex justify-between items-start">
                     <div>
@@ -311,7 +311,7 @@ export default function RiderDashboard() {
     }
 
     return (
-        <div className="space-y-6 composite-stable">
+        <div className="space-y-4 composite-stable">
 
             {/* ── Suspension Banner (prompt §7) ── */}
             {rider?.isSuspended && new Date(rider?.suspendedUntil) > new Date() && (
