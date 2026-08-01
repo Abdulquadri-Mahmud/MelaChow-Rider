@@ -408,7 +408,7 @@ export default function RiderDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         onClick={() => router.push("/rider/ongoing-delivery")}
-                        className="relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden group cursor-pointer rounded-[30px] border border-cyan-300/20 bg-[#071523] p-5 text-white shadow-2xl shadow-cyan-950/30 active:scale-[0.99] transition-all" style={{ backgroundImage: "radial-gradient(circle at 18% 26%, rgba(45, 105, 87, .85) 0 12%, transparent 13%), radial-gradient(circle at 77% 68%, rgba(75, 83, 55, .72) 0 13%, transparent 14%), linear-gradient(125deg, #081a28 0%, #12313a 45%, #0a1a23 100%)" }}
+                        className="-mx-4 sm:mx-0 relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden group cursor-pointer border border-cyan-300/20 bg-[#071523] p-2 text-white shadow-xl shadow-cyan-950/30 active:scale-[0.99] transition-all" style={{ backgroundImage: "radial-gradient(circle at 18% 26%, rgba(45, 105, 87, .85) 0 12%, transparent 13%), radial-gradient(circle at 77% 68%, rgba(75, 83, 55, .72) 0 13%, transparent 14%), linear-gradient(125deg, #081a28 0%, #12313a 45%, #0a1a23 100%)" }}
                     >
                         <div className="flex items-center gap-3.5">
                             <div className="w-10 h-10 rounded-[8px] bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
@@ -442,7 +442,7 @@ export default function RiderDashboard() {
                     key="idle"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-5 mt-5"
+                    className="-mx-4 sm:mx-0 space-y-5 mt-5"
                 >
                     {isOnline && pendingOffers.length > 0 ? (
                         <div className="space-y-4">
@@ -460,7 +460,7 @@ export default function RiderDashboard() {
                                     </Link>
                                 )}
                             </div>
-                            <div className={`relative min-h-[calc(100dvh-255px)] overflow-hidden rounded-[30px] border border-cyan-300/20 bg-[#071523] p-3 shadow-2xl shadow-cyan-950/30 ${pendingOffers.length > 1 ? "pb-5" : ""}`} style={{ backgroundImage: "radial-gradient(circle at 17% 22%, rgba(50, 111, 83, .78) 0 13%, transparent 14%), radial-gradient(circle at 88% 71%, rgba(94, 92, 48, .75) 0 14%, transparent 15%), linear-gradient(122deg, #071723, #143a3a 48%, #081820)" }}>
+                            <div className={`relative min-h-[calc(100dvh-255px)] overflow-hidden rounded-none sm:rounded-[30px] border border-cyan-300/20 bg-[#071523] p-3 shadow-2xl shadow-cyan-950/30 ${pendingOffers.length > 1 ? "pb-5" : ""}`} style={{ backgroundImage: "radial-gradient(circle at 17% 22%, rgba(50, 111, 83, .78) 0 13%, transparent 14%), radial-gradient(circle at 88% 71%, rgba(94, 92, 48, .75) 0 14%, transparent 15%), linear-gradient(122deg, #071723, #143a3a 48%, #081820)" }}>
                                 <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(27deg, transparent 42%, rgba(211,151,61,.55) 43% 48%, transparent 49%), linear-gradient(121deg, transparent 43%, rgba(40, 209, 238, .45) 44% 45%, transparent 46%), linear-gradient(rgba(121,181,177,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(121,181,177,.14) 1px, transparent 1px)", backgroundSize: "auto, auto, 38px 38px, 38px 38px" }} />
                                 <div className="relative z-10 space-y-3">
                                 {pendingOffers.slice(0, 5).map((offer) => (
@@ -547,7 +547,7 @@ export default function RiderDashboard() {
                         </div>
                         </div>
                     ) : !activeOrder ? (
-                        <div className={`relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden rounded-[30px] border shadow-2xl ${isOnline
+                        <div className={`relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden rounded-none sm:rounded-[30px] border shadow-2xl ${isOnline
                             ? "bg-[#071523] border-cyan-400/20 shadow-cyan-950/30"
                             : "bg-[#17141a] border-white/10 shadow-black/30"
                             }`}>

@@ -107,7 +107,7 @@ function RiderLayoutInner({ children }) {
                 </div>
                 <h2 className="text-xl font-black text-gray-900 dark:text-white mb-2">Connection Issue</h2>
                 <p className="text-sm text-gray-500 max-w-xs mb-6">
-                    We couldn't load your rider profile. This might be due to a slow connection or server maintenance.
+                    We could not load your rider profile. This might be due to a slow connection or server maintenance.
                 </p>
                 <button 
                     onClick={() => window.location.reload()}
@@ -120,7 +120,7 @@ function RiderLayoutInner({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0F1115] text-gray-900 dark:text-white transition-colors duration-300 composite-stable">
+        <div className={`${pathname === "/rider/dashboard" ? "dark " : ""}min-h-screen bg-white dark:bg-[#0F1115] text-gray-900 dark:text-white transition-colors duration-300 composite-stable`}>
             <RiderHeader isOnline={isOnline} toggleAvailability={toggleAvailability} isToggling={isToggling} />
             <main className="pt-24 pb-28 px-4 max-w-7xl mx-auto">
                 {children}
