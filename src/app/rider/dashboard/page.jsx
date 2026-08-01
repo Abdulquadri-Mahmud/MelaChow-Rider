@@ -184,7 +184,7 @@ export default function RiderDashboard() {
         const handleNewAssignment = () => {
             setLocalAssignmentStatus(null);
             fetchDashboardData();
-            toast.success("New delivery available! ðŸ›µ", { duration: 8000 });
+            toast.success("New delivery available! 🛵", { duration: 8000 });
         };
 
         const handleAssignmentAction = (event) => {
@@ -274,7 +274,7 @@ export default function RiderDashboard() {
         setOtpState(prev => ({ ...prev, confirming: true }));
         try {
             await riderConfirmDelivery(riderId, activeOrder._id, otpState.otp.trim());
-            toast.success("Order delivered! Well done. ðŸŽ‰");
+            toast.success("Order delivered! Well done. 🎉");
             setOtpState({ step: "idle", otp: "", sending: false, confirming: false, method: "", message: "" });
             fetchDashboardData();
             // Refresh profile to update earnings automatically
@@ -313,7 +313,7 @@ export default function RiderDashboard() {
     return (
         <div className="space-y-6 composite-stable">
 
-            {/* â”€â”€ Suspension Banner (prompt Â§7) â”€â”€ */}
+            {/* ── Suspension Banner (prompt §7) ── */}
             {rider?.isSuspended && new Date(rider?.suspendedUntil) > new Date() && (
                 <div className="bg-red-50 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 rounded p-3">
                     <p className="font-black text-sm text-red-800 dark:text-red-400 uppercase tracking-tight">Account Suspended</p>
@@ -327,11 +327,11 @@ export default function RiderDashboard() {
                 </div>
             )}
 
-            {/* â”€â”€ Strike Warning (prompt Â§7) â€” shown when â‰¥1 strike but not yet suspended â”€â”€ */}
+            {/* ── Strike Warning (prompt §7) — shown when ≥1 strike but not yet suspended ── */}
             {(rider?.terminationStrikes ?? 0) >= 1 && !rider?.isSuspended && (
                 <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-400 dark:border-amber-500/40 rounded p-2">
                     <p className="text-sm font-black text-amber-800 dark:text-amber-300">
-                        âš ï¸ Strike Warning: {rider.terminationStrikes} of 2
+                        ⚠️ Strike Warning: {rider.terminationStrikes} of 2
                     </p>
                     <p className="text-sm text-amber-700 dark:text-amber-400 mt-1 font-bold">
                         A second termination after food pickup will suspend your account for the platform-configured penalty period.
@@ -352,7 +352,7 @@ export default function RiderDashboard() {
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Earnings</span>
                     </div>
                     <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
-                        â‚¦{Number(rider?.totalEarnings ?? 0).toLocaleString()}
+                        ₦{Number(rider?.totalEarnings ?? 0).toLocaleString()}
                     </div>
                     <div className="text-[8px] text-gray-500 font-bold uppercase mt-0.5">lifetime</div>
                 </Link>
@@ -408,7 +408,7 @@ export default function RiderDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         onClick={() => router.push("/rider/ongoing-delivery")}
-                        className="relative overflow-hidden group cursor-pointer bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-[8px] p-4 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all border border-orange-400"
+                        className="relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden group cursor-pointer rounded-[30px] border border-cyan-300/20 bg-[#071523] p-5 text-white shadow-2xl shadow-cyan-950/30 active:scale-[0.99] transition-all" style={{ backgroundImage: "radial-gradient(circle at 18% 26%, rgba(45, 105, 87, .85) 0 12%, transparent 13%), radial-gradient(circle at 77% 68%, rgba(75, 83, 55, .72) 0 13%, transparent 14%), linear-gradient(125deg, #081a28 0%, #12313a 45%, #0a1a23 100%)" }}
                     >
                         <div className="flex items-center gap-3.5">
                             <div className="w-10 h-10 rounded-[8px] bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
@@ -420,14 +420,19 @@ export default function RiderDashboard() {
                                     Active Job Underway
                                 </span>
                                 <h3 className="font-black text-sm tracking-tight leading-tight">
-                                    {activeOrder.restaurantName || "Ongoing Delivery"} âž” {activeOrder.userName || "Customer"}
+                                    {activeOrder.restaurantName || "Ongoing Delivery"} ➔ {activeOrder.userName || "Customer"}
                                 </h3>
                                 <p className="text-[10px] text-orange-100 font-bold uppercase mt-0.5">
-                                    Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)} â€¢ Tap to view route details & complete status
+                                    Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)} • Tap to view route details & complete status
                                 </p>
                             </div>
                         </div>
-                    </motion.div>
+                        <div className="absolute inset-0 pointer-events-none opacity-35" style={{ backgroundImage: "linear-gradient(28deg, transparent 42%, rgba(205,148,69,.55) 43% 48%, transparent 49%), linear-gradient(121deg, transparent 46%, rgba(35,208,238,.38) 47% 48%, transparent 49%), linear-gradient(rgba(104,179,213,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(104,179,213,.14) 1px, transparent 1px)", backgroundSize: "auto, auto, 38px 38px, 38px 38px" }} />
+                        <div className="absolute z-10 bottom-5 left-5 right-5 space-y-2">
+                            <div className="rounded-2xl border border-white/15 bg-slate-950/80 p-3 backdrop-blur-md"><p className="text-[9px] font-black uppercase tracking-widest text-orange-200">Pickup · restaurant</p><p className="mt-1 text-xs font-bold text-white">{activeOrder.restaurantAddress || activeOrder.restaurantName || "Restaurant location"}</p></div>
+                            <div className="rounded-2xl border border-white/15 bg-slate-950/80 p-3 backdrop-blur-md"><p className="text-[9px] font-black uppercase tracking-widest text-cyan-200">Drop-off · customer</p><p className="mt-1 text-xs font-bold text-white">{activeOrder.deliveryFullAddress || activeOrder.deliveryAddress || activeOrder.userName || "Customer location"}</p></div>
+                            <div className="rounded-xl bg-orange-600 py-3 text-center text-xs font-black uppercase tracking-widest text-white">{isPendingAssignment ? "View & accept order" : "Open delivery"}</div>
+                        </div>                    </motion.div>
                 )}
             </AnimatePresence>
 
@@ -437,7 +442,7 @@ export default function RiderDashboard() {
                     key="idle"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6 mt-6"
+                    className="space-y-5 mt-5"
                 >
                     {isOnline && pendingOffers.length > 0 ? (
                         <div className="space-y-4">
@@ -455,49 +460,51 @@ export default function RiderDashboard() {
                                     </Link>
                                 )}
                             </div>
-                            <div className="grid grid-cols-1 gap-4">
+                            <div className={`relative min-h-[calc(100dvh-255px)] overflow-hidden rounded-[30px] border border-cyan-300/20 bg-[#071523] p-3 shadow-2xl shadow-cyan-950/30 ${pendingOffers.length > 1 ? "pb-5" : ""}`} style={{ backgroundImage: "radial-gradient(circle at 17% 22%, rgba(50, 111, 83, .78) 0 13%, transparent 14%), radial-gradient(circle at 88% 71%, rgba(94, 92, 48, .75) 0 14%, transparent 15%), linear-gradient(122deg, #071723, #143a3a 48%, #081820)" }}>
+                                <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(27deg, transparent 42%, rgba(211,151,61,.55) 43% 48%, transparent 49%), linear-gradient(121deg, transparent 43%, rgba(40, 209, 238, .45) 44% 45%, transparent 46%), linear-gradient(rgba(121,181,177,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(121,181,177,.14) 1px, transparent 1px)", backgroundSize: "auto, auto, 38px 38px, 38px 38px" }} />
+                                <div className="relative z-10 space-y-3">
                                 {pendingOffers.slice(0, 5).map((offer) => (
-                                    <div key={offer._id} className="composite-stable bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:border-orange-500/30 transition-all">
+                                    <div key={offer._id} className="composite-stable rounded-2xl border border-white/15 bg-slate-950/80 p-4 shadow-xl backdrop-blur-md transition-all hover:border-orange-400/60">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="min-w-0 flex-1 pr-3">
                                                 <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-500/20 rounded-full mb-2">
                                                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                                                     <span className="text-[9px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">New Offer</span>
                                                 </div>
-                                                <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
+                                                <h4 className="text-sm font-black text-white truncate">
                                                     {offer.restaurantName}
                                                 </h4>
                                                 <div className="space-y-1.5 mt-2">
                                                     <div className="p-2 rounded-[8px] bg-orange-50/50 dark:bg-white/5 border border-orange-100/50 dark:border-white/5 flex items-start gap-1.5">
                                                         <Package size={14} className="text-orange-600 shrink-0 mt-0.5" />
-                                                        <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
+                                                        <p className="text-xs text-white/85 font-bold leading-snug break-words">
                                                             Pickup: {offer.restaurantAddress || offer.restaurantId?.fullAddress || "Restaurant Location"}
                                                         </p>
                                                     </div>
                                                     <div className="p-2 rounded-[8px] bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-start gap-1.5">
                                                         <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
-                                                        <p className="text-xs text-gray-700 dark:text-white/80 font-bold leading-snug break-words">
+                                                        <p className="text-xs text-white/85 font-bold leading-snug break-words">
                                                             Deliver: {offer.deliveryFullAddress || "Customer Address"}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <div className="text-base font-black text-gray-900 dark:text-white">
-                                                    {offer.deliveryFee != null ? `â‚¦${Number(offer.deliveryFee).toLocaleString()}` : "â‚¦â€”"}
+                                                <div className="text-base font-black text-white">
+                                                    {offer.deliveryFee != null ? `₦${Number(offer.deliveryFee).toLocaleString()}` : "₦—"}
                                                 </div>
                                                 <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
                                             </div>
                                         </div>
 
-                                        {/* â”€â”€ Previous Rider Warning Banner (prompt Â§3) â”€â”€ */}
+                                        {/* ── Previous Rider Warning Banner (prompt §3) ── */}
                                         {offer.hasPreviousRider && offer.previousRider && (
                                             <div className="mt-3 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-r">
                                                 <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                                                    âš ï¸ Previously assigned to {offer.previousRider.name}
+                                                    ⚠️ Previously assigned to {offer.previousRider.name}
                                                 </p>
                                                 <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                                                    ðŸ“ž{" "}
+                                                    📞{" "}
                                                     <a
                                                         href={`tel:${offer.previousRider.phone}`}
                                                         className="underline font-medium ml-1"
@@ -507,11 +514,11 @@ export default function RiderDashboard() {
                                                 </p>
                                                 {offer.previousRider.foodPickedUp ? (
                                                     <p className="text-sm text-red-700 dark:text-red-400 font-semibold mt-2">
-                                                        ðŸ” Food already collected â€” call the previous rider to receive the food before heading to the customer.
+                                                        🍔 Food already collected — call the previous rider to receive the food before heading to the customer.
                                                     </p>
                                                 ) : (
                                                     <p className="text-sm text-green-700 dark:text-green-400 mt-2">
-                                                        âœ… Food is still at the restaurant â€” pick up as normal.
+                                                        ✅ Food is still at the restaurant — pick up as normal.
                                                     </p>
                                                 )}
                                             </div>
@@ -523,7 +530,7 @@ export default function RiderDashboard() {
                                                     const id = toast.loading("Accepting...");
                                                     try {
                                                         await acceptOffer(riderId, offer._id);
-                                                        toast.success("Delivery Accepted! ðŸ›µ", { id });
+                                                        toast.success("Delivery Accepted! 🛵", { id });
                                                         await Promise.allSettled([fetchDashboardData(), refreshProfile()]);
                                                     } catch (e) {
                                                         toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
@@ -538,12 +545,13 @@ export default function RiderDashboard() {
                                 ))}
                             </div>
                         </div>
+                        </div>
                     ) : !activeOrder ? (
-                        <div className={`relative min-h-[315px] overflow-hidden rounded-[30px] border shadow-2xl ${isOnline
+                        <div className={`relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden rounded-[30px] border shadow-2xl ${isOnline
                             ? "bg-[#071523] border-cyan-400/20 shadow-cyan-950/30"
                             : "bg-[#17141a] border-white/10 shadow-black/30"
                             }`}>
-                            <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(104, 179, 213, .16) 1px, transparent 1px), linear-gradient(90deg, rgba(104, 179, 213, .16) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
+                            <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(28deg, transparent 42%, rgba(205, 148, 69, .55) 43% 48%, transparent 49%), linear-gradient(121deg, transparent 46%, rgba(35, 208, 238, .38) 47% 48%, transparent 49%), linear-gradient(rgba(104, 179, 213, .16) 1px, transparent 1px), linear-gradient(90deg, rgba(104, 179, 213, .16) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
                             <div className="absolute -left-14 top-16 h-48 w-[135%] rotate-[19deg] rounded-full border-[18px] border-cyan-300/10" />
                             <div className="absolute -right-24 -top-20 h-72 w-72 rounded-full border-[22px] border-orange-400/10" />
                             <div className="absolute left-[14%] top-[28%] h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_18px_7px_rgba(103,232,249,.18)]" />
