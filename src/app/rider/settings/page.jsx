@@ -6,13 +6,14 @@ import { AnimatePresence } from "framer-motion";
 import {
     Bike, Phone, User, Shield, LogOut, ChevronRight,
     Moon, HelpCircle, MessageCircle, Star, Edit3, Mail,
-    Camera, Lock
+    Camera, Lock, Bell, Volume2, Vibrate
 } from "lucide-react";
 import { useTheme } from "@/app/context/ThemeContext";
 import { useRider } from "@/app/context/RiderContext";
 import PermanentInstallButton from "@/app/components/PermanentInstallButton";
 import NotificationSettings from "@/app/components/notifications/NotificationSettings";
 import toast from "react-hot-toast";
+import { getRiderAlertSettings, playRiderAlert, saveRiderAlertSettings } from "@/app/lib/riderAlertSettings";
 
 const SettingRow = ({ icon: Icon, label, value, onClick, danger = false, badge }) => (
     <button
@@ -68,6 +69,12 @@ export default function RiderSettingsPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editData, setEditData] = useState({ name: "", phone: "", email: "", password: "" });
+    const [alertSettings, setAlertSettings] = useState(() => getRiderAlertSettings());
+
+    const updateAlertSettings = (changes) => {
+        const next = saveRiderAlertSettings({ ...alertSettings, ...changes });
+        setAlertSettings(next);
+    };
 
     const handleLogout = () => {
         toast.success("Logged out successfully");
@@ -182,6 +189,38 @@ export default function RiderSettingsPage() {
                 </div>
                 <div className="p-4">
                     <NotificationSettings role="rider" mode="rider" />
+                </div>
+                <div id="alerts" className="mx-4 mb-4 overflow-hidden rounded-2xl border border-orange-500/15 bg-orange-50/60 dark:bg-orange-500/5">
+                    <div className="flex items-start gap-3 border-b border-orange-500/10 p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-600/20"><Bell size={18} /></div>
+                        <div>
+                            <p className="text-sm font-black text-gray-900 dark:text-white">Incoming order alerts</p>
+                            <p className="mt-0.5 text-xs leading-relaxed text-gray-500 dark:text-gray-400">Choose how delivery requests get your attention while you are online.</p>
+                        </div>
+                    </div>
+                    <div className="space-y-1 p-2">
+                        <button onClick={() => updateAlertSettings({ alarmEnabled: !alertSettings.alarmEnabled })} className="flex w-full items-center gap-3 rounded-xl p-3 text-left hover:bg-white/60 dark:hover:bg-white/5">
+                            <Volume2 size={18} className="text-orange-600" />
+                            <div className="flex-1"><p className="text-sm font-bold text-gray-900 dark:text-white">Loud delivery alarm</p><p className="text-xs text-gray-500">Repeat until the order is accepted.</p></div>
+                            <span className={`relative h-6 w-11 rounded-full transition-colors ${alertSettings.alarmEnabled ? "bg-orange-600" : "bg-gray-300 dark:bg-white/15"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${alertSettings.alarmEnabled ? "left-6" : "left-1"}`} /></span>
+                        </button>
+                        <button onClick={() => updateAlertSettings({ vibrationEnabled: !alertSettings.vibrationEnabled })} className="flex w-full items-center gap-3 rounded-xl p-3 text-left hover:bg-white/60 dark:hover:bg-white/5">
+                            <Vibrate size={18} className="text-orange-600" />
+                            <div className="flex-1"><p className="text-sm font-bold text-gray-900 dark:text-white">Vibration</p><p className="text-xs text-gray-500">Add vibration when your device supports it.</p></div>
+                            <span className={`relative h-6 w-11 rounded-full transition-colors ${alertSettings.vibrationEnabled ? "bg-orange-600" : "bg-gray-300 dark:bg-white/15"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${alertSettings.vibrationEnabled ? "left-6" : "left-1"}`} /></span>
+                        </button>
+                        <div className="flex items-center gap-3 rounded-xl p-3">
+                            <Bell size={18} className="text-orange-600" />
+                            <div className="flex-1"><p className="text-sm font-bold text-gray-900 dark:text-white">Repeat every</p><p className="text-xs text-gray-500">Applies while an offer is waiting.</p></div>
+                            <select value={alertSettings.intervalSeconds} onChange={(event) => updateAlertSettings({ intervalSeconds: Number(event.target.value) })} className="rounded-lg border border-orange-500/15 bg-white px-2 py-1.5 text-xs font-black text-gray-800 outline-none dark:bg-[#1A1D23] dark:text-white">
+                                <option value={6}>6 sec</option><option value={10}>10 sec</option><option value={15}>15 sec</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 border-t border-orange-500/10 p-3">
+                        <span className="text-[11px] font-medium text-gray-500">Use this to allow sound on your phone.</span>
+                        <button onClick={() => { playRiderAlert({ vibrationEnabled: alertSettings.vibrationEnabled }); toast.success("Alarm test started"); }} className="rounded-xl bg-orange-600 px-3 py-2 text-xs font-black text-white shadow-md shadow-orange-600/20 active:scale-95">Test alarm</button>
+                    </div>
                 </div>
                 {/* Theme Toggle — disabled */}
                 {/* <div className="flex items-center gap-4 p-4 rounded-2xl">

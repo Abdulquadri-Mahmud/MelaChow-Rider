@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Bike, Navigation, MapPin, Package, CheckCircle2, AlertCircle,
-    Wallet, Star, Phone, Loader2, Activity, RefreshCcw, AlertTriangle
+    Wallet, Star, Phone, Loader2, Activity, RefreshCcw, AlertTriangle, Bell
 } from "lucide-react";
 import { useRider } from "@/app/context/RiderContext";
 import { getActiveRiderOrder, getPendingOffers, riderPickedUpOrder, requestDeliveryOTP, riderConfirmDelivery, acceptOffer, toggleRiderAvailability } from "@/app/lib/riderApi";
@@ -15,14 +15,8 @@ import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
 import { useSocket } from "@/app/context/SocketContext";
 
-const playRiderOfferAlarm = () => {
-    try {
-        const alarm = new Audio("/sounds/urgency.mp3");
-        alarm.volume = 1;
-        alarm.play().catch(() => {});
-        navigator.vibrate?.([300, 120, 300, 120, 500]);
-    } catch {}
-};
+import { getRiderAlertSettings, playRiderAlert, saveRiderAlertSettings } from "@/app/lib/riderAlertSettings";
+
 export default function RiderDashboard() {
     const router = useRouter();
     const { rider, isOnline, refreshProfile } = useRider();
@@ -32,6 +26,7 @@ export default function RiderDashboard() {
     const [loading, setLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [localAssignmentStatus, setLocalAssignmentStatus] = useState(null);
+    const [alertSettings, setAlertSettings] = useState(() => getRiderAlertSettings());
     const offerAlarmRef = useRef(null);
     const [otpState, setOtpState] = useState(() => {
         if (typeof window !== "undefined") {
@@ -65,20 +60,27 @@ export default function RiderDashboard() {
     }, [loading, activeOrder, otpState.step]);
 
     useEffect(() => {
-        const hasPendingOffer = isOnline && pendingOffers.length > 0 && !activeOrder;
+        const syncAlertSettings = (event) => setAlertSettings(event.detail || getRiderAlertSettings());
+        window.addEventListener("rider:alert-settings", syncAlertSettings);
+        return () => window.removeEventListener("rider:alert-settings", syncAlertSettings);
+    }, []);
+
+    useEffect(() => {
+        const hasPendingOffer = alertSettings.alarmEnabled && isOnline && pendingOffers.length > 0 && !activeOrder;
         if (!hasPendingOffer) {
             if (offerAlarmRef.current) window.clearInterval(offerAlarmRef.current);
             offerAlarmRef.current = null;
             return;
         }
 
-        playRiderOfferAlarm();
-        offerAlarmRef.current = window.setInterval(playRiderOfferAlarm, 6000);
+        const ring = () => playRiderAlert({ vibrationEnabled: alertSettings.vibrationEnabled });
+        ring();
+        offerAlarmRef.current = window.setInterval(ring, alertSettings.intervalSeconds * 1000);
         return () => {
             if (offerAlarmRef.current) window.clearInterval(offerAlarmRef.current);
             offerAlarmRef.current = null;
         };
-    }, [activeOrder, isOnline, pendingOffers]);
+    }, [activeOrder, alertSettings, isOnline, pendingOffers]);
     const riderId = rider?._id || rider?.id;
     const effectiveRiderStatus = localAssignmentStatus === "accepted"
         ? "on_delivery"
@@ -337,27 +339,10 @@ export default function RiderDashboard() {
                 </div>
             )}
 
-            {/* Greeting */}
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white">
-                        Hey, {rider?.name?.split(" ")[0] || "Rider"} ðŸ‘‹
-                    </h1>
-                    <p className="text-gray-500 font-medium mt-1">
-                        {isOnline ? "You're online. Ready for deliveries!" : "Switch online to start earning."}
-                    </p>
-                </div>
-                <button
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    className={`p-2 rounded-[8px] bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-all ${isRefreshing ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
-                >
-                    <RefreshCcw size={20} className={isRefreshing ? 'animate-spin' : ''} />
-                </button>
-            </div>
 
             {/* Compact Stats */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="relative">
+                <div className="grid grid-cols-3 gap-2">
                 <Link
                     href="/rider/wallet"
                     className="bg-white dark:bg-[#1A1D23] border border-gray-100 dark:border-white/5 rounded-[8px] p-3 cursor-pointer hover:border-orange-500/30 transition-all group block min-w-0"
@@ -403,6 +388,15 @@ export default function RiderDashboard() {
                         {isOnline ? "Online" : "Offline"}
                     </div>
                 </Link>
+                </div>
+                <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    aria-label="Refresh dashboard"
+                    className={`absolute -right-2 -top-3 w-10 h-10 rounded-full bg-orange-600 text-white shadow-lg shadow-orange-600/30 border-4 border-[#F9FAFB] dark:border-[#121419] flex items-center justify-center transition-all ${isRefreshing ? "opacity-60 cursor-not-allowed" : "hover:bg-orange-700 active:scale-95"}`}
+                >
+                    <RefreshCcw size={17} className={isRefreshing ? "animate-spin" : ""} />
+                </button>
             </div>
 
             {/* Active Order Pulsing Alert Banner */}
@@ -545,22 +539,40 @@ export default function RiderDashboard() {
                             </div>
                         </div>
                     ) : !activeOrder ? (
-                        <div className={`p-10 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center text-center transition-all ${isOnline
-                            ? "bg-orange-50 dark:bg-orange-600/5 border-orange-200 dark:border-orange-500/20"
-                            : "bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20 opacity-60"
+                        <div className={`relative min-h-[315px] overflow-hidden rounded-[30px] border shadow-2xl ${isOnline
+                            ? "bg-[#071523] border-cyan-400/20 shadow-cyan-950/30"
+                            : "bg-[#17141a] border-white/10 shadow-black/30"
                             }`}>
-                            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${isOnline ? "bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500" : "bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500"
-                                }`}>
-                                <Bike size={40} className={isOnline ? "animate-bounce" : ""} />
+                            <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(104, 179, 213, .16) 1px, transparent 1px), linear-gradient(90deg, rgba(104, 179, 213, .16) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
+                            <div className="absolute -left-14 top-16 h-48 w-[135%] rotate-[19deg] rounded-full border-[18px] border-cyan-300/10" />
+                            <div className="absolute -right-24 -top-20 h-72 w-72 rounded-full border-[22px] border-orange-400/10" />
+                            <div className="absolute left-[14%] top-[28%] h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_18px_7px_rgba(103,232,249,.18)]" />
+                            <div className="absolute right-[19%] bottom-[26%] h-2 w-2 rounded-full bg-orange-400 shadow-[0_0_16px_6px_rgba(251,146,60,.2)]" />
+                            <svg className="absolute inset-0 h-full w-full opacity-80" viewBox="0 0 600 315" preserveAspectRatio="none" aria-hidden="true">
+                                <path d="M-30 238 C90 145, 128 292, 237 204 S384 59, 493 151 S611 116, 648 31" fill="none" stroke="rgba(34,211,238,.62)" strokeWidth="3" strokeDasharray="8 10" />
+                                <path d="M-20 82 C89 147, 139 58, 229 100 S365 233, 466 185 S554 138, 638 209" fill="none" stroke="rgba(251,146,60,.40)" strokeWidth="2" strokeDasharray="5 12" />
+                            </svg>
+                            <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/65 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100 backdrop-blur-md">
+                                <span className={`h-2 w-2 rounded-full ${isOnline ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+                                Live dispatch map
                             </div>
-                            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
-                                {isOnline ? "Waiting for Orders..." : "You are Offline"}
-                            </h3>
-                            <p className="text-gray-500 text-sm font-medium max-w-[220px]">
-                                {isOnline
-                                    ? "Stay active in the area for faster assignments."
-                                    : "Hit the power button in the header to start receiving jobs."}
-                            </p>
+                            <button onClick={() => setAlertSettings(saveRiderAlertSettings({ ...alertSettings, alarmEnabled: !alertSettings.alarmEnabled }))} className={`absolute right-5 top-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wide backdrop-blur-md transition-all ${alertSettings.alarmEnabled ? "border-orange-300/30 bg-orange-500/20 text-orange-100" : "border-white/10 bg-slate-950/60 text-slate-300"}`}>
+                                <Bell size={13} /> Alert {alertSettings.alarmEnabled ? "on" : "off"}
+                            </button>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
+                                <div className={`relative mb-5 flex h-24 w-24 items-center justify-center rounded-full border ${isOnline ? "border-cyan-200/40 bg-cyan-300/10 text-cyan-100" : "border-slate-500/30 bg-slate-500/10 text-slate-300"}`}>
+                                    {isOnline && <><span className="absolute inset-[-13px] rounded-full border border-cyan-300/25 animate-ping" /><span className="absolute inset-[-28px] rounded-full border border-cyan-300/10 animate-pulse" /></>}
+                                    <Bike size={38} strokeWidth={1.7} />
+                                </div>
+                                <h3 className="text-xl font-black tracking-tight text-white">{isOnline ? "Waiting for incoming orders" : "Dispatch is paused"}</h3>
+                                <p className="mt-2 max-w-[290px] text-sm font-medium leading-relaxed text-slate-300">
+                                    {isOnline ? "Your delivery zone is being monitored. New requests will appear here immediately." : "Go online when you are ready to receive delivery requests."}
+                                </p>
+                            </div>
+                            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-left backdrop-blur-md">
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200"><MapPin size={15} className="text-orange-400" /> Your active delivery zone</div>
+                                <Navigation size={16} className="text-cyan-300" />
+                            </div>
                         </div>
                     ) : null}
                 </motion.div>
@@ -571,9 +583,9 @@ export default function RiderDashboard() {
                 <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-5 flex items-start gap-4">
                     <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
                     <div className="text-sm text-red-500 leading-relaxed">
-                        <span className="font-bold text-red-400">Notice:</span> You won't
+                        <span className="font-bold text-red-400">Notice:</span> You will not
                         receive any delivery requests while offline. Switch online whenever
-                        you're ready to earn.
+                        you are ready to earn.
                     </div>
                 </div>
             )}
