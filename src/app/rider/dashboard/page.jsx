@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,14 @@ import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
 import { useSocket } from "@/app/context/SocketContext";
 
+const playRiderOfferAlarm = () => {
+    try {
+        const alarm = new Audio("/sounds/urgency.mp3");
+        alarm.volume = 1;
+        alarm.play().catch(() => {});
+        navigator.vibrate?.([300, 120, 300, 120, 500]);
+    } catch {}
+};
 export default function RiderDashboard() {
     const router = useRouter();
     const { rider, isOnline, refreshProfile } = useRider();
@@ -24,6 +32,7 @@ export default function RiderDashboard() {
     const [loading, setLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [localAssignmentStatus, setLocalAssignmentStatus] = useState(null);
+    const offerAlarmRef = useRef(null);
     const [otpState, setOtpState] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("pending_delivery_otp");
@@ -55,6 +64,21 @@ export default function RiderDashboard() {
         }
     }, [loading, activeOrder, otpState.step]);
 
+    useEffect(() => {
+        const hasPendingOffer = isOnline && pendingOffers.length > 0 && !activeOrder;
+        if (!hasPendingOffer) {
+            if (offerAlarmRef.current) window.clearInterval(offerAlarmRef.current);
+            offerAlarmRef.current = null;
+            return;
+        }
+
+        playRiderOfferAlarm();
+        offerAlarmRef.current = window.setInterval(playRiderOfferAlarm, 6000);
+        return () => {
+            if (offerAlarmRef.current) window.clearInterval(offerAlarmRef.current);
+            offerAlarmRef.current = null;
+        };
+    }, [activeOrder, isOnline, pendingOffers]);
     const riderId = rider?._id || rider?.id;
     const effectiveRiderStatus = localAssignmentStatus === "accepted"
         ? "on_delivery"
@@ -158,7 +182,7 @@ export default function RiderDashboard() {
         const handleNewAssignment = () => {
             setLocalAssignmentStatus(null);
             fetchDashboardData();
-            toast.success("New delivery available! 🛵", { duration: 8000 });
+            toast.success("New delivery available! ðŸ›µ", { duration: 8000 });
         };
 
         const handleAssignmentAction = (event) => {
@@ -248,7 +272,7 @@ export default function RiderDashboard() {
         setOtpState(prev => ({ ...prev, confirming: true }));
         try {
             await riderConfirmDelivery(riderId, activeOrder._id, otpState.otp.trim());
-            toast.success("Order delivered! Well done. 🎉");
+            toast.success("Order delivered! Well done. ðŸŽ‰");
             setOtpState({ step: "idle", otp: "", sending: false, confirming: false, method: "", message: "" });
             fetchDashboardData();
             // Refresh profile to update earnings automatically
@@ -287,7 +311,7 @@ export default function RiderDashboard() {
     return (
         <div className="space-y-6 composite-stable">
 
-            {/* ── Suspension Banner (prompt §7) ── */}
+            {/* â”€â”€ Suspension Banner (prompt Â§7) â”€â”€ */}
             {rider?.isSuspended && new Date(rider?.suspendedUntil) > new Date() && (
                 <div className="bg-red-50 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 rounded p-3">
                     <p className="font-black text-sm text-red-800 dark:text-red-400 uppercase tracking-tight">Account Suspended</p>
@@ -301,11 +325,11 @@ export default function RiderDashboard() {
                 </div>
             )}
 
-            {/* ── Strike Warning (prompt §7) — shown when ≥1 strike but not yet suspended ── */}
+            {/* â”€â”€ Strike Warning (prompt Â§7) â€” shown when â‰¥1 strike but not yet suspended â”€â”€ */}
             {(rider?.terminationStrikes ?? 0) >= 1 && !rider?.isSuspended && (
                 <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-400 dark:border-amber-500/40 rounded p-2">
                     <p className="text-sm font-black text-amber-800 dark:text-amber-300">
-                        ⚠️ Strike Warning: {rider.terminationStrikes} of 2
+                        âš ï¸ Strike Warning: {rider.terminationStrikes} of 2
                     </p>
                     <p className="text-sm text-amber-700 dark:text-amber-400 mt-1 font-bold">
                         A second termination after food pickup will suspend your account for the platform-configured penalty period.
@@ -317,7 +341,7 @@ export default function RiderDashboard() {
             <div className="flex justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-black text-gray-900 dark:text-white">
-                        Hey, {rider?.name?.split(" ")[0] || "Rider"} 👋
+                        Hey, {rider?.name?.split(" ")[0] || "Rider"} ðŸ‘‹
                     </h1>
                     <p className="text-gray-500 font-medium mt-1">
                         {isOnline ? "You're online. Ready for deliveries!" : "Switch online to start earning."}
@@ -343,7 +367,7 @@ export default function RiderDashboard() {
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Earnings</span>
                     </div>
                     <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
-                        ₦{Number(rider?.totalEarnings ?? 0).toLocaleString()}
+                        â‚¦{Number(rider?.totalEarnings ?? 0).toLocaleString()}
                     </div>
                     <div className="text-[8px] text-gray-500 font-bold uppercase mt-0.5">lifetime</div>
                 </Link>
@@ -402,10 +426,10 @@ export default function RiderDashboard() {
                                     Active Job Underway
                                 </span>
                                 <h3 className="font-black text-sm tracking-tight leading-tight">
-                                    {activeOrder.restaurantName || "Ongoing Delivery"} ➔ {activeOrder.userName || "Customer"}
+                                    {activeOrder.restaurantName || "Ongoing Delivery"} âž” {activeOrder.userName || "Customer"}
                                 </h3>
                                 <p className="text-[10px] text-orange-100 font-bold uppercase mt-0.5">
-                                    Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)} • Tap to view route details & complete status
+                                    Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)} â€¢ Tap to view route details & complete status
                                 </p>
                             </div>
                         </div>
@@ -466,20 +490,20 @@ export default function RiderDashboard() {
                                             </div>
                                             <div className="text-right shrink-0">
                                                 <div className="text-base font-black text-gray-900 dark:text-white">
-                                                    {offer.deliveryFee != null ? `₦${Number(offer.deliveryFee).toLocaleString()}` : "₦—"}
+                                                    {offer.deliveryFee != null ? `â‚¦${Number(offer.deliveryFee).toLocaleString()}` : "â‚¦â€”"}
                                                 </div>
                                                 <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
                                             </div>
                                         </div>
 
-                                        {/* ── Previous Rider Warning Banner (prompt §3) ── */}
+                                        {/* â”€â”€ Previous Rider Warning Banner (prompt Â§3) â”€â”€ */}
                                         {offer.hasPreviousRider && offer.previousRider && (
                                             <div className="mt-3 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-r">
                                                 <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                                                    ⚠️ Previously assigned to {offer.previousRider.name}
+                                                    âš ï¸ Previously assigned to {offer.previousRider.name}
                                                 </p>
                                                 <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                                                    📞{" "}
+                                                    ðŸ“ž{" "}
                                                     <a
                                                         href={`tel:${offer.previousRider.phone}`}
                                                         className="underline font-medium ml-1"
@@ -489,11 +513,11 @@ export default function RiderDashboard() {
                                                 </p>
                                                 {offer.previousRider.foodPickedUp ? (
                                                     <p className="text-sm text-red-700 dark:text-red-400 font-semibold mt-2">
-                                                        🍔 Food already collected — call the previous rider to receive the food before heading to the customer.
+                                                        ðŸ” Food already collected â€” call the previous rider to receive the food before heading to the customer.
                                                     </p>
                                                 ) : (
                                                     <p className="text-sm text-green-700 dark:text-green-400 mt-2">
-                                                        ✅ Food is still at the restaurant — pick up as normal.
+                                                        âœ… Food is still at the restaurant â€” pick up as normal.
                                                     </p>
                                                 )}
                                             </div>
@@ -505,7 +529,7 @@ export default function RiderDashboard() {
                                                     const id = toast.loading("Accepting...");
                                                     try {
                                                         await acceptOffer(riderId, offer._id);
-                                                        toast.success("Delivery Accepted! 🛵", { id });
+                                                        toast.success("Delivery Accepted! ðŸ›µ", { id });
                                                         await Promise.allSettled([fetchDashboardData(), refreshProfile()]);
                                                     } catch (e) {
                                                         toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
