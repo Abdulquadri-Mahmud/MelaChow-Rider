@@ -238,7 +238,23 @@ export default function RiderSettingsPage() {
                         <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${theme === 'dark' ? "left-7" : "left-1"}`} />
                     </button>
                 </div> */}
-                <SettingRow icon={Bike} label="Availability" value={isOnline ? "Currently Online" : "Currently Offline"} onClick={toggleAvailability} badge={isOnline ? "LIVE" : undefined} />
+                <div className="flex items-center gap-4 p-4 rounded-2xl">
+                    <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center shrink-0">
+                        <Moon size={18} className="text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <div className="flex-1">
+                        <p className="font-bold text-sm text-gray-900 dark:text-white">Dark Mode</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Use the dark appearance across the Rider app</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        aria-label="Toggle dark mode"
+                        className={`relative w-12 h-6 rounded-full transition-colors ${theme === "dark" ? "bg-orange-600" : "bg-gray-200 dark:bg-white/10"}`}
+                    >
+                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${theme === "dark" ? "left-7" : "left-1"}`} />
+                    </button>
+                </div>                <SettingRow icon={Bike} label="Availability" value={isOnline ? "Currently Online" : "Currently Offline"} onClick={toggleAvailability} badge={isOnline ? "LIVE" : undefined} />
             </motion.div>
 
             {/* Support */}
