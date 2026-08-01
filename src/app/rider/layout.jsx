@@ -120,7 +120,7 @@ function RiderLayoutInner({ children }) {
     }
 
     return (
-        <div className={`${pathname === "/rider/dashboard" ? "dark " : ""}min-h-screen bg-white dark:bg-[#0F1115] text-gray-900 dark:text-white transition-colors duration-300 composite-stable`}>
+        <div className="min-h-screen bg-white dark:bg-[#0F1115] text-gray-900 dark:text-white transition-colors duration-300 composite-stable">
             <RiderHeader isOnline={isOnline} toggleAvailability={toggleAvailability} isToggling={isToggling} />
             <main className="pt-24 pb-28 px-4 max-w-7xl mx-auto">
                 {children}
