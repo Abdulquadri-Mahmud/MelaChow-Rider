@@ -86,8 +86,8 @@ export const riderPickedUpOrder = async (riderId, orderId) => {
     return response.data;
 };
 
-export const requestDeliveryOTP = async (riderId, orderId) => {
-    const response = await API.post(`/riders/${riderId}/request-delivery-otp`, { orderId });
+export const requestDeliveryOTP = async (riderId, orderId, { resend = false } = {}) => {
+    const response = await API.post(`/riders/${riderId}/request-delivery-otp`, { orderId, resend });
     return response.data;
 };
 
@@ -128,7 +128,7 @@ export const getRiderSpecificOrder = async (riderId, orderId) => {
     return response.data;
 };
 
-// ── Delivery Overhaul — Termination & Disputed Delivery ──────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ Delivery Overhaul Ã¢â‚¬â€ Termination & Disputed Delivery Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 /**
  * Rider-initiated order termination.
@@ -155,10 +155,10 @@ export const reportUndeliverable = async (riderId, orderId, reason = "") => {
     return response.data;
 };
 
-// ── Payout API ────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ Payout API Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 // Fetch live bank list from Paystack via rider-scoped route.
-// NOTE: /wallet/banks uses vendorAuth — calling it as a rider returns 401
+// NOTE: /wallet/banks uses vendorAuth Ã¢â‚¬â€ calling it as a rider returns 401
 // which triggers the rider logout interceptor. Use /riders/banks instead.
 export const getBankList = async () => {
     const response = await API.get('/riders/banks');
