@@ -762,34 +762,22 @@ export default function OngoingDeliveryPage() {
                         <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded p-2 mb-4 border border-zinc-100 dark:border-zinc-800">
                             <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-zinc-100 dark:border-zinc-800 pb-2">
                                 <Package size={14} className="text-orange-600" />
-                                Order Details
+                                Items to collect
                             </h3>
                             <div className="space-y-3">
                                 {activeOrder.items.map((item, idx) => {
                                     const itemName = item.name || item.variant?.name || item.foodName || "Item";
                                     const quantity = Number(item.quantity) || 1;
-                                    const options = item.selected_options || [];
-                                    const portionLabel = item.portion_label || item.portion || "";
-                                    let fullSentence = `Deliver ${quantity} Ãƒâ€” ${itemName}${portionLabel ? ` Ã¢â‚¬â€ ${portionLabel}` : ""}`;
-                                    if (options.length > 0) {
-                                        const optList = options.map((opt) => {
-                                            const group = opt.group_name || opt.groupName || "Option";
-                                            return `${group}: ${Number(opt.quantity) || 1} Ãƒâ€” ${opt.label || opt.name}`;
-                                        });
-                                        fullSentence += `. Each order includes ${optList.length === 1 ? optList[0] : optList.length === 2 ? optList.join(" and ") : optList.slice(0, -1).join(", ") + ", and " + optList.slice(-1)}`;
-                                    }
-                                    fullSentence += ".";
-                                    return (
-                                        <div key={idx} className="flex gap-2.5">
-                                            <div className="p-1 h-fit bg-zinc-200 dark:bg-zinc-800 rounded text-zinc-500 shrink-0">
-                                                <Package size={10} />
+                                    const options = item.selected_options || item.metadata?.selected_options || [];
+                                    const mealGroupLabel = item.meal_group_label || item.metadata?.meal_group_label || "";
+                                    const portionLabel = item.portion_label || item.portion || "";                                    return (
+                                        <div key={idx} className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div><p className="text-sm font-black text-zinc-900 dark:text-white">{quantity} × {itemName}</p>{portionLabel && <p className="mt-0.5 text-xs font-bold text-orange-600">{portionLabel}</p>}{mealGroupLabel && <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-orange-600">For: {mealGroupLabel}</p>}</div>
+                                                <Package size={16} className="shrink-0 text-orange-600" />
                                             </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 leading-snug">{fullSentence}</p>
-                                                {item.note && (
-                                                    <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-1 italic font-medium">Note: {item.note}</p>
-                                                )}
-                                            </div>
+                                            {options.length > 0 && <div className="mt-2 space-y-1 border-t border-zinc-100 pt-2 dark:border-zinc-800">{options.map((opt, optionIndex) => <p key={optionIndex} className="text-xs font-semibold text-zinc-600 dark:text-zinc-300"><span className="text-zinc-400">{opt.group_name || opt.groupName || "Choice"}:</span> {(Number(opt.quantity) || 1) * quantity} × {opt.label || opt.name}</p>)}</div>}
+                                            {item.note && <p className="mt-2 text-xs italic text-amber-700 dark:text-amber-300">Note: {item.note}</p>}
                                         </div>
                                     );
                                 })}
@@ -826,9 +814,9 @@ export default function OngoingDeliveryPage() {
                                 <CheckCircle2 size={16} className="text-white" />
                             </div>
                             <div>
-                                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none mb-1">Confirmation Ready</p>
+                                <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none mb-1">Delivery code sent</p>
                                 <p className="text-white font-bold text-[11px]">
-                                    Delivery code has been sent to the customer&apos;s portal.
+                                    Ask the customer for the 6-digit delivery code.
                                 </p>
                             </div>
                         </div>
@@ -969,8 +957,9 @@ export default function OngoingDeliveryPage() {
                                         disabled={otpState.sending || otpState.resendRemaining > 0}
                                         className="w-full h-11 rounded border border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 font-black text-xs disabled:opacity-50"
                                     >
-                                        {otpState.resendRemaining > 0 ? `RESEND AVAILABLE IN ${otpState.resendRemaining}s` : "RESEND LATEST CODE"}
-                                    </button><button
+                                        {otpState.resendRemaining > 0 ? `RESEND IN ${otpState.resendRemaining}s` : "RESEND CODE"}
+                                    </button>
+                                    <button
                                         onClick={() => setOtpState((prev) => ({ ...prev, step: "idle" }))}
                                         className="text-xs font-black text-zinc-400 hover:text-zinc-500 uppercase tracking-widest py-2"
                                     >
