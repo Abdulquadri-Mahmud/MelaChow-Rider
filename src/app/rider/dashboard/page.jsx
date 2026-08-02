@@ -351,7 +351,7 @@ export default function RiderDashboard() {
                         <Wallet size={13} className="text-orange-500 shrink-0" />
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Earnings</span>
                     </div>
-                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
+                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-zinc-900 dark:text-white truncate">
                         ₦{Number(rider?.totalEarnings ?? 0).toLocaleString()}
                     </div>
                     <div className="text-[8px] text-gray-500 font-bold uppercase mt-0.5">lifetime</div>
@@ -365,7 +365,7 @@ export default function RiderDashboard() {
                         <Star size={13} className="text-yellow-600 dark:text-yellow-500 shrink-0" />
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Rating</span>
                     </div>
-                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
+                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-zinc-900 dark:text-white truncate">
                         {rider?.rating ? Number(rider.rating).toFixed(1) : "New"}
                     </div>
                     <div className="text-[8px] text-gray-500 font-bold uppercase mt-0.5 truncate">
@@ -381,7 +381,7 @@ export default function RiderDashboard() {
                         <Activity size={13} className="text-blue-600 dark:text-blue-500 shrink-0" />
                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate">Deliveries</span>
                     </div>
-                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate">
+                    <div className="text-sm sm:text-base font-black text-gray-900 dark:text-zinc-900 dark:text-white truncate">
                         {rider?.totalDeliveries ?? 0}
                     </div>
                     <div className={`text-[8px] font-bold uppercase mt-0.5 truncate ${isOnline ? "text-green-500" : "text-red-500"}`}>
@@ -393,7 +393,7 @@ export default function RiderDashboard() {
                     onClick={handleRefresh}
                     disabled={isRefreshing}
                     aria-label="Refresh dashboard"
-                    className={`absolute -right-2 -top-3 w-10 h-10 rounded-full bg-orange-600 text-white shadow-lg shadow-orange-600/30 border-4 border-[#F9FAFB] dark:border-[#121419] flex items-center justify-center transition-all ${isRefreshing ? "opacity-60 cursor-not-allowed" : "hover:bg-orange-700 active:scale-95"}`}
+                    className={`absolute -right-2 -top-3 w-10 h-10 rounded-full bg-orange-600 text-zinc-900 dark:text-white shadow-lg shadow-orange-600/30 border-4 border-[#F9FAFB] dark:border-[#121419] flex items-center justify-center transition-all ${isRefreshing ? "opacity-60 cursor-not-allowed" : "hover:bg-orange-700 active:scale-95"}`}
                 >
                     <RefreshCcw size={17} className={isRefreshing ? "animate-spin" : ""} />
                 </button>
@@ -408,11 +408,11 @@ export default function RiderDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         onClick={() => router.push("/rider/ongoing-delivery")}
-                        className="-mx-4 sm:mx-0 relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden group cursor-pointer border border-cyan-300/20 bg-[#071523] p-2 text-white shadow-xl shadow-cyan-950/30 active:scale-[0.99] transition-all" style={{ backgroundImage: "radial-gradient(circle at 18% 26%, rgba(45, 105, 87, .85) 0 12%, transparent 13%), radial-gradient(circle at 77% 68%, rgba(75, 83, 55, .72) 0 13%, transparent 14%), linear-gradient(125deg, #081a28 0%, #12313a 45%, #0a1a23 100%)" }}
+                        className="-mx-4 sm:mx-0 relative cursor-pointer rounded-2xl border border-zinc-200 bg-white p-4 text-zinc-900 shadow-sm transition-all active:scale-[0.99] dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-900 dark:text-white"
                     >
                         <div className="flex items-center gap-3.5">
                             <div className="w-10 h-10 rounded-[8px] bg-white/20 flex items-center justify-center shrink-0 border border-white/20">
-                                <Bike size={20} className="text-white animate-bounce" />
+                                <Bike size={20} className="text-zinc-900 dark:text-white animate-bounce" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[8px] font-black uppercase tracking-wider mb-1">
@@ -422,16 +422,15 @@ export default function RiderDashboard() {
                                 <h3 className="font-black text-sm tracking-tight leading-tight">
                                     {activeOrder.restaurantName || "Ongoing Delivery"} ➔ {activeOrder.userName || "Customer"}
                                 </h3>
-                                <p className="text-[10px] text-orange-100 font-bold uppercase mt-0.5">
-                                    Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)} • Tap to view route details & complete status
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">
+                                    Order #{String(activeOrder.orderId || activeOrder._id || "").toUpperCase().slice(-8)}
                                 </p>
                             </div>
                         </div>
-                        <div className="absolute inset-0 pointer-events-none opacity-35" style={{ backgroundImage: "linear-gradient(28deg, transparent 42%, rgba(205,148,69,.55) 43% 48%, transparent 49%), linear-gradient(121deg, transparent 46%, rgba(35,208,238,.38) 47% 48%, transparent 49%), linear-gradient(rgba(104,179,213,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(104,179,213,.14) 1px, transparent 1px)", backgroundSize: "auto, auto, 38px 38px, 38px 38px" }} />
-                        <div className="absolute z-10 bottom-5 left-5 right-5 space-y-2">
-                            <div className="rounded-2xl border border-white/15 bg-slate-950/80 p-3 backdrop-blur-md"><p className="text-[9px] font-black uppercase tracking-widest text-orange-200">Pickup · restaurant</p><p className="mt-1 text-xs font-bold text-white">{activeOrder.restaurantAddress || activeOrder.restaurantName || "Restaurant location"}</p></div>
-                            <div className="rounded-2xl border border-white/15 bg-slate-950/80 p-3 backdrop-blur-md"><p className="text-[9px] font-black uppercase tracking-widest text-cyan-200">Drop-off · customer</p><p className="mt-1 text-xs font-bold text-white">{activeOrder.deliveryFullAddress || activeOrder.deliveryAddress || activeOrder.userName || "Customer location"}</p></div>
-                            <div className="rounded-xl bg-orange-600 py-3 text-center text-xs font-black uppercase tracking-widest text-white">{isPendingAssignment ? "View & accept order" : "Open delivery"}</div>
+                        <div className="mt-4 space-y-2">
+                            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800"><p className="text-[9px] font-black uppercase tracking-widest text-orange-600">Pickup · restaurant</p><p className="mt-1 text-xs font-bold text-zinc-900 dark:text-white">{activeOrder.restaurantAddress || activeOrder.restaurantName || "Restaurant location"}</p></div>
+                            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800"><p className="text-[9px] font-black uppercase tracking-widest text-orange-600">Drop-off · customer</p><p className="mt-1 text-xs font-bold text-zinc-900 dark:text-white">{activeOrder.deliveryFullAddress || activeOrder.deliveryAddress || activeOrder.userName || "Customer location"}</p></div>
+                            <div className="rounded-xl bg-orange-600 py-3 text-center text-xs font-black uppercase tracking-widest text-zinc-900 dark:text-white">{isPendingAssignment ? "View & accept order" : "Open delivery"}</div>
                         </div>                    </motion.div>
                 )}
             </AnimatePresence>
@@ -447,9 +446,9 @@ export default function RiderDashboard() {
                     {isOnline && pendingOffers.length > 0 ? (
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                <h3 className="text-xl font-black text-gray-900 dark:text-zinc-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
                                     <Package size={20} className="text-orange-600" />
-                                    Available Deliveries ({pendingOffers.length})
+                                    New deliveries ({pendingOffers.length})
                                 </h3>
                                 {pendingOffers.length > 5 && (
                                     <Link 
@@ -460,37 +459,36 @@ export default function RiderDashboard() {
                                     </Link>
                                 )}
                             </div>
-                            <div className={`relative min-h-[calc(100dvh-255px)] overflow-hidden rounded-none sm:rounded-[30px] border border-cyan-300/20 bg-[#071523] p-3 shadow-2xl shadow-cyan-950/30 ${pendingOffers.length > 1 ? "pb-2" : ""}`} style={{ backgroundImage: "radial-gradient(circle at 17% 22%, rgba(50, 111, 83, .78) 0 13%, transparent 14%), radial-gradient(circle at 88% 71%, rgba(94, 92, 48, .75) 0 14%, transparent 15%), linear-gradient(122deg, #071723, #143a3a 48%, #081820)" }}>
-                                <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(27deg, transparent 42%, rgba(211,151,61,.55) 43% 48%, transparent 49%), linear-gradient(121deg, transparent 43%, rgba(40, 209, 238, .45) 44% 45%, transparent 46%), linear-gradient(rgba(121,181,177,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(121,181,177,.14) 1px, transparent 1px)", backgroundSize: "auto, auto, 38px 38px, 38px 38px" }} />
-                                <div className="relative z-10 space-y-3">
+                            <div className={`space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950 ${pendingOffers.length > 1 ? "pb-2" : ""}`}>
+                                <div className="space-y-3">
                                 {pendingOffers.slice(0, 5).map((offer) => (
-                                    <div key={offer._id} className="composite-stable rounded-2xl border border-white/15 bg-slate-950/80 p-4 shadow-xl backdrop-blur-md transition-all hover:border-orange-400/60">
+                                    <div key={offer._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition-all hover:border-orange-300 dark:border-zinc-700 dark:bg-zinc-900">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="min-w-0 flex-1 pr-3">
                                                 <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-500/20 rounded-full mb-2">
                                                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                                                     <span className="text-[9px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">New Offer</span>
                                                 </div>
-                                                <h4 className="text-sm font-black text-white truncate">
+                                                <h4 className="text-sm font-black text-zinc-900 dark:text-white truncate">
                                                     {offer.restaurantName}
                                                 </h4>
                                                 <div className="space-y-1.5 mt-2">
                                                     <div className="p-2 rounded-[8px] bg-orange-50/50 dark:bg-white/5 border border-orange-100/50 dark:border-white/5 flex items-start gap-1.5">
                                                         <Package size={14} className="text-orange-600 shrink-0 mt-0.5" />
-                                                        <p className="text-xs text-white/85 font-bold leading-snug break-words">
+                                                        <p className="text-xs text-zinc-900 dark:text-white/85 font-bold leading-snug break-words">
                                                             Pickup: {offer.restaurantAddress || offer.restaurantId?.fullAddress || "Restaurant Location"}
                                                         </p>
                                                     </div>
                                                     <div className="p-2 rounded-[8px] bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-start gap-1.5">
                                                         <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
-                                                        <p className="text-xs text-white/85 font-bold leading-snug break-words">
+                                                        <p className="text-xs text-zinc-900 dark:text-white/85 font-bold leading-snug break-words">
                                                             Deliver: {offer.deliveryFullAddress || "Customer Address"}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <div className="text-base font-black text-white">
+                                                <div className="text-base font-black text-zinc-900 dark:text-white">
                                                     {offer.deliveryFee != null ? `₦${Number(offer.deliveryFee).toLocaleString()}` : "₦—"}
                                                 </div>
                                                 <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Payout</div>
@@ -536,7 +534,7 @@ export default function RiderDashboard() {
                                                         toast.error(e?.response?.data?.message || "Failed to accept offer", { id });
                                                     }
                                                 }}
-                                                className="flex-1 h-9 bg-orange-600 text-white rounded-[8px] font-black text-xs flex items-center justify-center transition-all active:scale-95"
+                                                className="flex-1 h-9 bg-orange-600 text-zinc-900 dark:text-white rounded-[8px] font-black text-xs flex items-center justify-center transition-all active:scale-95"
                                             >
                                                 ACCEPT JOB
                                             </button>
@@ -562,9 +560,9 @@ export default function RiderDashboard() {
                             </svg>
                             <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/65 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100 backdrop-blur-md">
                                 <span className={`h-2 w-2 rounded-full ${isOnline ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-                                Live dispatch map
+                                Delivery status
                             </div>
-                            <button onClick={() => setAlertSettings(saveRiderAlertSettings({ ...alertSettings, alarmEnabled: !alertSettings.alarmEnabled }))} className={`absolute right-5 top-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wide backdrop-blur-md transition-all ${alertSettings.alarmEnabled ? "border-orange-300/30 bg-orange-500/20 text-orange-100" : "border-white/10 bg-slate-950/60 text-slate-300"}`}>
+                            <button onClick={() => setAlertSettings(saveRiderAlertSettings({ ...alertSettings, alarmEnabled: !alertSettings.alarmEnabled }))} className={`absolute right-5 top-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wide backdrop-blur-md transition-all ${alertSettings.alarmEnabled ? "border-orange-300/30 bg-orange-500/20 text-zinc-500" : "border-white/10 bg-slate-950/60 text-slate-300"}`}>
                                 <Bell size={13} /> Alert {alertSettings.alarmEnabled ? "on" : "off"}
                             </button>
                             <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
@@ -572,9 +570,9 @@ export default function RiderDashboard() {
                                     {isOnline && <><span className="absolute inset-[-13px] rounded-full border border-cyan-300/25 animate-ping" /><span className="absolute inset-[-28px] rounded-full border border-cyan-300/10 animate-pulse" /></>}
                                     <Bike size={38} strokeWidth={1.7} />
                                 </div>
-                                <h3 className="text-xl font-black tracking-tight text-white">{isOnline ? "Waiting for incoming orders" : "Dispatch is paused"}</h3>
+                                <h3 className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{isOnline ? "Waiting for incoming orders" : "Dispatch is paused"}</h3>
                                 <p className="mt-2 max-w-[290px] text-sm font-medium leading-relaxed text-slate-300">
-                                    {isOnline ? "Your delivery zone is being monitored. New requests will appear here immediately." : "Go online when you are ready to receive delivery requests."}
+                                    {isOnline ? "You are ready to receive delivery requests." : "Go online when you are ready to receive delivery requests."}
                                 </p>
                             </div>
                             <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-left backdrop-blur-md">
