@@ -74,7 +74,11 @@ export default function RiderDashboard() {
         }
 
         const ring = () => playRiderAlert({ vibrationEnabled: alertSettings.vibrationEnabled });
-        ring();
+        if (skipInitialOfferAlarmRef.current) {
+            skipInitialOfferAlarmRef.current = false;
+        } else {
+            ring();
+        }
         offerAlarmRef.current = window.setInterval(ring, alertSettings.intervalSeconds * 1000);
         return () => {
             if (offerAlarmRef.current) window.clearInterval(offerAlarmRef.current);
@@ -182,9 +186,14 @@ export default function RiderDashboard() {
         }
 
         const handleNewAssignment = () => {
+            // Alert first. Do not wait for the offer refresh before notifying the rider.
+            if (alertSettings.alarmEnabled) {
+                skipInitialOfferAlarmRef.current = true;
+                playRiderAlert({ vibrationEnabled: alertSettings.vibrationEnabled });
+            }
             setLocalAssignmentStatus(null);
             fetchDashboardData();
-            toast.success("New delivery available! 🛵", { duration: 8000 });
+            toast.success("New delivery available!", { duration: 8000 });
         };
 
         const handleAssignmentAction = (event) => {
@@ -213,7 +222,7 @@ export default function RiderDashboard() {
             window.removeEventListener("rider:new_assignment", handleNewAssignment);
             window.removeEventListener("rider:assignment_action", handleAssignmentAction);
         };
-    }, [riderId, refreshProfile, isOnline]);
+    }, [riderId, refreshProfile, isOnline, alertSettings]);
 
     useEffect(() => {
         if (activeOrder?._id) {
@@ -545,42 +554,16 @@ export default function RiderDashboard() {
                         </div>
                         </div>
                     ) : !activeOrder ? (
-                        <div className={`relative min-h-[calc(100dvh-255px)] sm:min-h-[520px] overflow-hidden rounded-none sm:rounded-[30px] border shadow-2xl ${isOnline
-                            ? "bg-[#071523] border-cyan-400/20 shadow-cyan-950/30"
-                            : "bg-[#17141a] border-white/10 shadow-black/30"
-                            }`}>
-                            <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(28deg, transparent 42%, rgba(205, 148, 69, .55) 43% 48%, transparent 49%), linear-gradient(121deg, transparent 46%, rgba(35, 208, 238, .38) 47% 48%, transparent 49%), linear-gradient(rgba(104, 179, 213, .16) 1px, transparent 1px), linear-gradient(90deg, rgba(104, 179, 213, .16) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
-                            <div className="absolute -left-14 top-16 h-48 w-[135%] rotate-[19deg] rounded-full border-[18px] border-cyan-300/10" />
-                            <div className="absolute -right-24 -top-20 h-72 w-72 rounded-full border-[22px] border-orange-400/10" />
-                            <div className="absolute left-[14%] top-[28%] h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_18px_7px_rgba(103,232,249,.18)]" />
-                            <div className="absolute right-[19%] bottom-[26%] h-2 w-2 rounded-full bg-orange-400 shadow-[0_0_16px_6px_rgba(251,146,60,.2)]" />
-                            <svg className="absolute inset-0 h-full w-full opacity-80" viewBox="0 0 600 315" preserveAspectRatio="none" aria-hidden="true">
-                                <path d="M-30 238 C90 145, 128 292, 237 204 S384 59, 493 151 S611 116, 648 31" fill="none" stroke="rgba(34,211,238,.62)" strokeWidth="3" strokeDasharray="8 10" />
-                                <path d="M-20 82 C89 147, 139 58, 229 100 S365 233, 466 185 S554 138, 638 209" fill="none" stroke="rgba(251,146,60,.40)" strokeWidth="2" strokeDasharray="5 12" />
-                            </svg>
-                            <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/65 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100 backdrop-blur-md">
-                                <span className={`h-2 w-2 rounded-full ${isOnline ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-                                Delivery status
-                            </div>
-                            <button onClick={() => setAlertSettings(saveRiderAlertSettings({ ...alertSettings, alarmEnabled: !alertSettings.alarmEnabled }))} className={`absolute right-5 top-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wide backdrop-blur-md transition-all ${alertSettings.alarmEnabled ? "border-orange-300/30 bg-orange-500/20 text-zinc-500" : "border-white/10 bg-slate-950/60 text-slate-300"}`}>
-                                <Bell size={13} /> Alert {alertSettings.alarmEnabled ? "on" : "off"}
-                            </button>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
-                                <div className={`relative mb-5 flex h-24 w-24 items-center justify-center rounded-full border ${isOnline ? "border-cyan-200/40 bg-cyan-300/10 text-cyan-100" : "border-slate-500/30 bg-slate-500/10 text-slate-300"}`}>
-                                    {isOnline && <><span className="absolute inset-[-13px] rounded-full border border-cyan-300/25 animate-ping" /><span className="absolute inset-[-28px] rounded-full border border-cyan-300/10 animate-pulse" /></>}
-                                    <Bike size={38} strokeWidth={1.7} />
-                                </div>
-                                <h3 className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{isOnline ? "Waiting for incoming orders" : "Dispatch is paused"}</h3>
-                                <p className="mt-2 max-w-[290px] text-sm font-medium leading-relaxed text-slate-300">
-                                    {isOnline ? "You are ready to receive delivery requests." : "Go online when you are ready to receive delivery requests."}
-                                </p>
-                            </div>
-                            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-left backdrop-blur-md">
-                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200"><MapPin size={15} className="text-orange-400" /> Your active delivery zone</div>
-                                <Navigation size={16} className="text-cyan-300" />
-                            </div>
-                        </div>
-                    ) : null}
+                        <div className="rounded-2xl border border-zinc-200 bg-white p-6 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-600 dark:bg-orange-500/10">
+    <Bike size={30} strokeWidth={1.8} />
+  </div>
+  <h3 className="mt-4 text-lg font-bold text-zinc-900 dark:text-white">{isOnline ? "Waiting for a delivery" : "You are offline"}</h3>
+  <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{isOnline ? "New delivery requests will show here." : "Go online when you are ready to receive delivery requests."}</p>
+  <button onClick={() => setAlertSettings(saveRiderAlertSettings({ ...alertSettings, alarmEnabled: !alertSettings.alarmEnabled }))} className={`mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${alertSettings.alarmEnabled ? "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300" : "border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"}`}>
+    <Bell size={14} /> Alerts {alertSettings.alarmEnabled ? "on" : "off"}
+  </button>
+</div>                    ) : null}
                 </motion.div>
             )}
 
