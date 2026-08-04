@@ -28,6 +28,7 @@ export default function RiderDashboard() {
     const [localAssignmentStatus, setLocalAssignmentStatus] = useState(null);
     const [alertSettings, setAlertSettings] = useState(() => getRiderAlertSettings());
     const offerAlarmRef = useRef(null);
+    const skipInitialOfferAlarmRef = useRef(false);
     const [otpState, setOtpState] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("pending_delivery_otp");
