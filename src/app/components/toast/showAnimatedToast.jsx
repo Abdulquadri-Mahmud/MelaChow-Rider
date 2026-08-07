@@ -1,18 +1,27 @@
 'use client';
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const showAnimatedToast = (type, message, id, action = null) => {
   toast.custom(
     (t) => (
       <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.8}
+        onDragEnd={(event, info) => {
+          if (Math.abs(info.offset.x) > 50 || Math.abs(info.velocity.x) > 200) {
+            toast.dismiss(t.id);
+          }
+        }}
+        onClick={() => toast.dismiss(t.id)}
         initial={{ x: 80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 80, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 24 }}
-        className={`max-w-sm w-full rounded-xl px-4 py-3 shadow-lg flex items-start gap-3 ${type === "success"
+        className={`max-w-sm w-full rounded-xl px-4 py-3 shadow-lg flex items-start gap-3 cursor-grab active:cursor-grabbing select-none touch-pan-x ${type === "success"
             ? "bg-white border-l-4 border-emerald-400"
             : "bg-white border-l-4 border-rose-400"
           }`}
@@ -22,7 +31,8 @@ const showAnimatedToast = (type, message, id, action = null) => {
           <p className="text-sm font-medium text-gray-900">{message}</p>
           {action && (
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 toast.dismiss(t.id);
                 window.location.href = action.href;
               }}
@@ -33,7 +43,10 @@ const showAnimatedToast = (type, message, id, action = null) => {
           )}
         </div>
         <button
-          onClick={() => toast.dismiss(t.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            toast.dismiss(t.id);
+          }}
           className="text-gray-400 hover:text-gray-600"
           aria-label="Close notification"
         >
