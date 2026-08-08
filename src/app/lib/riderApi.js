@@ -45,6 +45,21 @@ export const riderRegister = async (payload) => {
     return response.data;
 };
 
+export const riderForgotPassword = async (phoneOrEmail) => {
+    const response = await API.post("/auth/rider/forgot-password", { phoneOrEmail });
+    return response.data;
+};
+
+export const verifyRiderResetCode = async (phoneOrEmail, otp) => {
+    const response = await API.post("/auth/rider/verify-reset-code", { phoneOrEmail, otp });
+    return response.data;
+};
+
+export const riderResetPassword = async (phoneOrEmail, resetToken, newPassword) => {
+    const response = await API.post("/auth/rider/reset-password", { phoneOrEmail, resetToken, newPassword });
+    return response.data;
+};
+
 export const getRiderProfile = async () => {
     const response = await API.get("/auth/rider/me");
     return response.data;
