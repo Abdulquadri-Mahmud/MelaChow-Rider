@@ -151,7 +151,7 @@ export default function RiderLoginPage() {
                         <div className="space-y-3">
                             <div className="flex justify-between items-center px-2">
                                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Key Access</label>
-                                <button type="button" className="text-orange-600 text-[10px] font-black uppercase tracking-widest hover:underline deco-2">Recovery?</button>
+                                <Link href="/auth/rider/forgot-password" className="text-orange-600 text-[10px] font-black uppercase tracking-widest hover:underline deco-2">Recovery?</Link>
                             </div>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
