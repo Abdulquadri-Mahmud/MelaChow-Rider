@@ -475,6 +475,9 @@ export default function OngoingDeliveryPage() {
             }
         } catch (error) {
             toast.error(error?.response?.data?.message || `Failed to ${action} order`);
+            if (action === "pickup" && [404, 409].includes(error?.response?.status)) {
+                await fetchActiveOrder();
+            }
         }
     };
 
