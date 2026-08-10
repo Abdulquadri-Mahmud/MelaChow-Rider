@@ -276,6 +276,9 @@ export default function RiderDashboard() {
         } catch (error) {
             setOtpState(prev => ({ ...prev, sending: false }));
             toast.error(error?.response?.data?.message || `Failed to ${action} order`);
+            if (action === "pickup" && [404, 409].includes(error?.response?.status)) {
+                await Promise.allSettled([refreshProfile(), fetchDashboardData()]);
+            }
         }
     };
 
