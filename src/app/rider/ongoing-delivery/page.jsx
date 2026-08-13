@@ -616,11 +616,11 @@ export default function OngoingDeliveryPage() {
 
     // Human-readable countdown label
     const countdownStr =
-        countdown.remaining === null
+        !isHeadingToStore || countdown.remaining === null
             ? null
             : countdown.isExpired
-            ? "Ã¢ÂÂ° Time expired Ã¢â‚¬â€ order being reassigned"
-            : `Ã¢ÂÂ± ${String(countdown.minutes).padStart(2, "0")}:${String(countdown.seconds).padStart(2, "0")} remaining`;
+            ? "Time expired — order being reassigned"
+            : `${String(countdown.minutes).padStart(2, "0")}:${String(countdown.seconds).padStart(2, "0")} remaining`;
 
     const countdownColorClass = countdown.isDanger
         ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
