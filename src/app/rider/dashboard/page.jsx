@@ -15,7 +15,7 @@ import toast from "react-hot-toast";
 import socketService from "@/app/lib/socketService";
 import { useSocket } from "@/app/context/SocketContext";
 
-import { getRiderAlertSettings, playRiderAlert, saveRiderAlertSettings } from "@/app/lib/riderAlertSettings";
+import { getRiderAlertSettings, playRiderAlert, primeRiderAlertAudio, saveRiderAlertSettings } from "@/app/lib/riderAlertSettings";
 
 export default function RiderDashboard() {
     const router = useRouter();
@@ -64,6 +64,20 @@ export default function RiderDashboard() {
         const syncAlertSettings = (event) => setAlertSettings(event.detail || getRiderAlertSettings());
         window.addEventListener("rider:alert-settings", syncAlertSettings);
         return () => window.removeEventListener("rider:alert-settings", syncAlertSettings);
+    }, []);
+
+    useEffect(() => {
+        const primeAudio = () => {
+            primeRiderAlertAudio();
+            window.removeEventListener("pointerdown", primeAudio);
+            window.removeEventListener("keydown", primeAudio);
+        };
+        window.addEventListener("pointerdown", primeAudio, { once: true });
+        window.addEventListener("keydown", primeAudio, { once: true });
+        return () => {
+            window.removeEventListener("pointerdown", primeAudio);
+            window.removeEventListener("keydown", primeAudio);
+        };
     }, []);
 
     useEffect(() => {
