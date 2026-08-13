@@ -832,8 +832,16 @@ export default function OngoingDeliveryPage() {
                                 const targetAddr = isHeadingToStore
                                     ? activeOrder.restaurantAddress || ""
                                     : activeOrder.deliveryFullAddress || "";
-                                if (!targetAddr.trim()) { toast.error("Location address not found"); return; }
-                                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetAddr)}`);
+                                const coordinates = isHeadingToStore
+                                    ? activeOrder.restaurantCoordinates
+                                    : activeOrder.deliveryCoordinates || activeOrder.deliveryAddress?.coordinates;
+                                const lat = Number(coordinates?.lat);
+                                const lng = Number(coordinates?.lng);
+                                const hasPin = Number.isFinite(lat) && Number.isFinite(lng);
+                                const destination = hasPin ? `${lat},${lng}` : targetAddr.trim();
+                                if (!destination) { toast.error("Location address not found"); return; }
+                                if (!hasPin) toast("This older address has no precise pin. Navigating with the full written address.");
+                                window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`, "_blank", "noopener,noreferrer");
                             }}
                             className="h-12 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-black text-xs flex items-center justify-center transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95"
                         >
