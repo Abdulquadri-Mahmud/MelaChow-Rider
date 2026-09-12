@@ -20,17 +20,43 @@ API.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle 401 Unauthorized
+let riderRefreshPromise = null;
+
+const refreshRiderAccessToken = async () => {
+    riderRefreshPromise ||= axios.post("/api/auth/rider/refresh", {}, { withCredentials: true })
+        .then((response) => {
+            const accessToken = response.data?.accessToken;
+            if (!accessToken) throw new Error("Rider refresh response did not include an access token");
+            TokenManager.setToken(accessToken, "rider");
+            return accessToken;
+        })
+        .finally(() => { riderRefreshPromise = null; });
+    return riderRefreshPromise;
+};
+
+// Refresh an expired access token once before treating the session as invalid.
 API.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
+    async (error) => {
+        const request = error.config;
+        const isAuthRequest = request?.url?.startsWith("/auth/rider/");
+        if (error.response?.status !== 401 || !request || request._riderAuthRetried || isAuthRequest) {
+            return Promise.reject(error);
+        }
+
+        request._riderAuthRetried = true;
+        try {
+            const accessToken = await refreshRiderAccessToken();
+            request.headers = request.headers || {};
+            request.headers.Authorization = `Bearer ${accessToken}`;
+            return API(request);
+        } catch (refreshError) {
             TokenManager.clearToken('rider');
             if (typeof window !== "undefined") {
                 window.dispatchEvent(new Event("rider:unauthorized"));
             }
+            return Promise.reject(refreshError);
         }
-        return Promise.reject(error);
     }
 );
 

@@ -54,6 +54,7 @@ const PushNotificationPrompt = () => {
     }, [shouldShowPrompt]);
 
     const handleSubscribe = async () => {
+        if (loading) return;
         setStatus('idle');
         const success = await subscribe();
         if (success) {
@@ -134,7 +135,6 @@ const PushNotificationPrompt = () => {
 
                     <button
                         onClick={handleDismiss}
-                        disabled={loading}
                         className="px-4 py-2.5 rounded-xl font-medium text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                         Later

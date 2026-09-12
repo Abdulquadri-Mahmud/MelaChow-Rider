@@ -111,7 +111,9 @@ export default function RiderDashboard() {
         effectiveRiderStatus === "pending_assignment" &&
         ["assigned", "pending_assignment", "rider_assigned"].includes(orderLifecycleStatus);
     const isOnDelivery = effectiveRiderStatus === "on_delivery";
-    const isHeadingToStore = isOnDelivery && ["assigned", "rider_assigned"].includes(orderLifecycleStatus);
+    // PostgreSQL keeps the order at ready_for_pickup after a rider accepts it.
+    // It must remain in the pickup phase until the rider explicitly confirms pickup.
+    const isHeadingToStore = isOnDelivery && ["assigned", "rider_assigned", "ready_for_pickup"].includes(orderLifecycleStatus);
     const isDeliveringToCustomer = isOnDelivery && ["out_for_delivery", "picked_up"].includes(orderLifecycleStatus);
     const activeOrderTitle = isPendingAssignment
         ? "New Request"
@@ -163,8 +165,6 @@ export default function RiderDashboard() {
 
     useEffect(() => {
         const riderHasActiveAssignment = Boolean(
-            rider?.currentOrderId ||
-            rider?.status === "pending_assignment" ||
             rider?.status === "on_delivery" ||
             localAssignmentStatus === "accepted"
         );

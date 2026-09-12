@@ -8,6 +8,7 @@ import {
 import toast from 'react-hot-toast';
 
 const SERVICE_WORKER_STATUS_TIMEOUT_MS = 8000;
+const PUSH_SUBSCRIBE_TIMEOUT_MS = 15000;
 
 const withTimeout = (promise, ms, message) => {
     let timeoutId;
@@ -22,7 +23,9 @@ export function usePushNotifications(role = 'user') {
     const [subscription, setSubscription] = useState(null);
     const [isSupported, setIsSupported] = useState(false);
     const [permission, setPermission] = useState('default');
-    const [loading, setLoading] = useState(true);
+    // `loading` represents an explicit subscribe/unsubscribe action only.
+    // Initial service-worker discovery must never lock the prompt controls.
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const STORAGE_PREFIX = useMemo(() => `melachow_${role}_`, [role]);
@@ -55,7 +58,6 @@ export function usePushNotifications(role = 'user') {
      */
     useEffect(() => {
         const checkSupport = async () => {
-            setLoading(true);
             const pushSupported =
                 typeof window !== 'undefined' &&
                 'serviceWorker' in navigator &&
@@ -84,8 +86,6 @@ export function usePushNotifications(role = 'user') {
                     setError(err.message || 'Failed to check notification status');
                 }
             }
-
-            setLoading(false);
         };
 
         checkSupport();
@@ -108,7 +108,11 @@ export function usePushNotifications(role = 'user') {
             setPermission(result);
 
             if (result === 'granted') {
-                const sub = await subscribeUserToPush(role);
+                const sub = await withTimeout(
+                    subscribeUserToPush(role),
+                    PUSH_SUBSCRIBE_TIMEOUT_MS,
+                    'Notification setup took too long. You can close this message and try again later.'
+                );
                 setSubscription(sub);
                 localStorage.setItem(`${STORAGE_PREFIX}push_notifications_enabled`, 'true');
                 localStorage.setItem(`${STORAGE_PREFIX}push_prompt_dismissed`, 'true'); // Dismiss prompt once subscribed

@@ -119,7 +119,7 @@ function TerminateModal({ isOpen, onClose, onConfirm, isLoading, foodPickedUp, e
                                     onChange={(e) => setNote(e.target.value)}
                                     className="w-full px-3 py-2.5 pr-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-red-500 dark:focus:border-red-500 appearance-none cursor-pointer"
                                 >
-                                    <option value="">Ã¢â‚¬â€ Select a reason (optional) Ã¢â‚¬â€</option>
+                                    <option value="">Select a reason (optional)</option>
                                     {TERMINATION_REASONS.map((r) => (
                                         <option key={r} value={r}>{r}</option>
                                     ))}
@@ -352,6 +352,10 @@ export default function OngoingDeliveryPage() {
 
     const fetchActiveOrder = useCallback(async () => {
         if (!riderId) return;
+        if (rider?.status !== "on_delivery") {
+            redirectToDashboard();
+            return;
+        }
         try {
             const data = await getActiveRiderOrder(riderId);
             const order = data?.data?.order || data?.order || (data?._id ? data : null);
@@ -368,7 +372,7 @@ export default function OngoingDeliveryPage() {
         } finally {
             if (!redirectingRef.current) setLoading(false);
         }
-    }, [redirectToDashboard, riderId]);
+    }, [redirectToDashboard, rider?.status, riderId]);
 
     useEffect(() => {
         fetchActiveOrder();
@@ -390,7 +394,7 @@ export default function OngoingDeliveryPage() {
         }
     }, [loading, activeOrder, otpState.step]);
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Socket listeners (prompt Ã‚Â§5, Ã‚Â§8) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // Socket listeners (prompt )
     useEffect(() => {
         if (!activeOrder?._id) return;
 
@@ -571,7 +575,7 @@ export default function OngoingDeliveryPage() {
         }
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Loading / empty states Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    //  Loading / empty states
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-6">
@@ -601,15 +605,17 @@ export default function OngoingDeliveryPage() {
         );
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Derived state Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // Derived state
     const orderLifecycleStatus = activeOrder.orderStatus || activeOrder.status;
-    const isHeadingToStore = ["assigned", "rider_assigned"].includes(orderLifecycleStatus);
+    // Accepting a PostgreSQL job does not mean the food has been collected.
+    // ready_for_pickup must show the pickup action, never the delivery OTP action.
+    const isHeadingToStore = ["assigned", "rider_assigned", "ready_for_pickup"].includes(orderLifecycleStatus);
     const isOutForDelivery = ["out_for_delivery", "picked_up"].includes(orderLifecycleStatus);
     const isDisputed = orderLifecycleStatus === "disputed_delivery";
 
     // Termination allowed any time (not disputed, not completed)
     const canTerminate = !isDisputed && !["delivered", "cancelled", "completed"].includes(orderLifecycleStatus);
-    // Report Undeliverable: ONLY visible when hasPreviousRider is true (prompt Ã‚Â§5)
+    // Report Undeliverable: ONLY visible when hasPreviousRider is true (prompt)
     const canReportUndeliverable = !!activeOrder.hasPreviousRider && !isDisputed;
 
     // (countdown already derived at top of component)
@@ -629,10 +635,10 @@ export default function OngoingDeliveryPage() {
         : "bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400";
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-0 text-zinc-900 dark:text-zinc-100">
-            <div className="max-w-md mx-auto mt-2 px-2 space-y-4">
+        <div className=" bg-zinc-50 dark:bg-zinc-950 pb-0 text-zinc-900 dark:text-zinc-100">
+            <div className="max-w-xl mx-auto">
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Disputed Delivery Banner Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/*Disputed Delivery Banner */}
                 {isDisputed && (
                     <motion.div
                         initial={{ opacity: 0, y: -8 }}
@@ -651,7 +657,7 @@ export default function OngoingDeliveryPage() {
                     </motion.div>
                 )}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Previous Rider Warning Banner (prompt Ã‚Â§3) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+                {/* Previous Rider Warning Banner (prompt)
                      Prompt spec: amber border-l-4, phone as tappable tel: link */}
                 {activeOrder.hasPreviousRider && activeOrder.previousRider && (
                     <motion.div
@@ -660,10 +666,10 @@ export default function OngoingDeliveryPage() {
                         className="border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-r"
                     >
                         <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                            Ã¢Å¡Â Ã¯Â¸Â Previously assigned to {activeOrder.previousRider.name}
+                            Previously assigned to {activeOrder.previousRider.name}
                         </p>
                         <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                            Ã°Å¸â€œÅ¾{" "}
+                            {" "}
                             <a
                                 href={`tel:${activeOrder.previousRider.phone}`}
                                 className="underline font-medium ml-1"
@@ -673,24 +679,24 @@ export default function OngoingDeliveryPage() {
                         </p>
                         {activeOrder.previousRider.foodPickedUp ? (
                             <p className="text-sm text-red-700 dark:text-red-400 font-semibold mt-2">
-                                Ã°Å¸Ââ€ Food already collected Ã¢â‚¬â€ call the previous rider to receive the food before heading to the customer.
+                                Food already collected Ã¢â‚¬â€ call the previous rider to receive the food before heading to the customer.
                             </p>
                         ) : (
                             <p className="text-sm text-green-700 dark:text-green-400 mt-2">
-                                Ã¢Å“â€¦ Food is still at the restaurant Ã¢â‚¬â€ pick up as normal.
+                                Food is still at the restaurant Ã¢â‚¬â€ pick up as normal.
                             </p>
                         )}
                     </motion.div>
                 )}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Remake waiting state label Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Remake waiting state label */}
                 {isWaitingRemake && remakeLabel && (
                     <div className="p-2 rounded bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-xs font-bold text-blue-700 dark:text-blue-400">
                         {remakeLabel}
                     </div>
                 )}
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Main Card Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* Main Card */}
                 <div className="relative overflow-hidden bg-white dark:bg-[#1A1D23] rounded border border-zinc-100 dark:border-zinc-800 shadow-sm p-2">
 
                     {/* Header Badge */}
@@ -762,7 +768,7 @@ export default function OngoingDeliveryPage() {
 
                     {/* Order Summary */}
                     {activeOrder.items && activeOrder.items.length > 0 && (
-                        <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded p-2 mb-4 border border-zinc-100 dark:border-zinc-800">
+                        <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded p-2 border border-zinc-100 dark:border-zinc-800">
                             <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-zinc-100 dark:border-zinc-800 pb-2">
                                 <Package size={14} className="text-orange-600" />
                                 Items to collect
@@ -864,7 +870,7 @@ export default function OngoingDeliveryPage() {
                                     </>
                                 )}
                             </button>
-                        ) : !isDisputed ? (
+                        ) : isOutForDelivery && !isDisputed ? (
                             <button
                                 onClick={() => handleAction("deliver")}
                                 disabled={otpState.sending || isWaitingRemake}
@@ -882,12 +888,12 @@ export default function OngoingDeliveryPage() {
                         ) : (
                             <div className="h-12 rounded bg-amber-100 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 flex items-center justify-center font-black text-[9px] uppercase tracking-widest">
                                 <AlertTriangle size={14} className="mr-1.5" />
-                                DISPUTED
+                                {isDisputed ? "DISPUTED" : "WAITING FOR STATUS UPDATE"}
                             </div>
                         )}
                     </div>
 
-                    {/* Terminate / Undeliverable row Ã¢â‚¬â€ visually secondary (prompt Ã‚Â§4, Ã‚Â§5) */}
+                    {/* Terminate / Undeliverable row Ã¢â‚¬â€ visually secondary (prompt ) */}
                     {!isDisputed && (
                         <div className="flex gap-3 mt-3">
                             {canTerminate && (
@@ -914,7 +920,7 @@ export default function OngoingDeliveryPage() {
                 </div>
             </div>
 
-            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Full Screen OTP Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+            {/* Full Screen OTP Modal */}
             <AnimatePresence>
                 {otpState.step === "awaiting_otp" && (
                     <div className="fixed inset-0 z-50 flex bg-white dark:bg-[#1A1D23]">
@@ -983,7 +989,7 @@ export default function OngoingDeliveryPage() {
                 )}
             </AnimatePresence>
 
-            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Termination Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+            {/* Termination Modal*/}
             <TerminateModal
                 isOpen={terminateModalOpen}
                 onClose={() => { if (!terminateLoading) { setTerminateModalOpen(false); setTerminateError(""); } }}
@@ -993,7 +999,7 @@ export default function OngoingDeliveryPage() {
                 error={terminateError}
             />
 
-            {/* Ã¢â€â‚¬Ã¢â€â‚¬ Undeliverable Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+            {/* Undeliverable Modal */}
             <UndeliverableModal
                 isOpen={undeliverableModalOpen}
                 onClose={() => { if (!undeliverableLoading) { setUndeliverableModalOpen(false); setUndeliverableError(""); } }}

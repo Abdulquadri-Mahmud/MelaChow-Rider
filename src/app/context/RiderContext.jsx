@@ -199,8 +199,9 @@ export const RiderProvider = ({ children }) => {
                 // Prevents the OFFLINE flash that would trigger accidental toggle.
                 setRider(prev => prev ? {
                     ...prev,
-                    status: 'pending_assignment',
-                    currentOrderId: data.orderId
+                    // A live-board broadcast is only an offer. Keep the rider
+                    // available for other jobs until explicit acceptance.
+                    currentOrderId: null
                 } : prev);
                 setIsOnline(true);
             }

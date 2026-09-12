@@ -21,19 +21,7 @@ const PermanentInstallButton = () => {
 
   // ── Already installed ──────────────────────────────────────────────────────
   if (isInstalled) {
-    return (
-      <div className="flex items-center gap-3 p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-500/20">
-          <CheckCircle2 size={24} />
-        </div>
-        <div>
-          <h4 className="text-sm font-black text-emerald-900 dark:text-emerald-400 uppercase tracking-wider">App Installed</h4>
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-500/80 font-bold uppercase tracking-widest mt-0.5">
-            MelaChow is active on your home screen
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // ── Click handler (platform-aware) ─────────────────────────────────────────
